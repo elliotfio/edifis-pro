@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 const PublicRoutes = () => {
   const { isAuthenticated } = useAuthStore();
 
-  return !isAuthenticated ? <Outlet /> : <Navigate to="/profile" replace />;
+  return !isAuthenticated ? <Outlet /> : <Navigate to="/worksites" replace />;
 };
 
 export default PublicRoutes;

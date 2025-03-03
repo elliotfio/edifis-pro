@@ -10,24 +10,30 @@ import { useAuthStore } from '@/stores/authStore';
 import Loader from '@/components/ui/Loader';
 import { useAutoLogin } from '@/api/queries/authQueries';
 import { useEffect, useState } from 'react';
-const AppRoutes = () => {
-//   const { isAuthenticated } = useAuthStore();
-  const [isAuthenticated, _] = useState(true);
+import Worksites from '@/features/worksites/Worksites';
+import Admin from '@/features/admin/Admin';
+import Settings from '@/features/settings/Settings';
+import Artisans from '@/features/artisans/Artisans';
+import Planification from '@/features/planification/Planification';
+import Dashboard from '@/features/dashboard/Dashboard';
 
-  const { refetch: autoLogin, isPending } = useAutoLogin();
+const AppRoutes = () => {
+  const { isAuthenticated } = useAuthStore();
+
+//   const { refetch: autoLogin, isPending } = useAutoLogin();
 
   // Faire l'auth
   // useEffect(() => {
   //   autoLogin();
   // }, [autoLogin]);
 
-  if (isPending) return <Loader />
+//   if (isPending) return <Loader />
 
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex">
       {isAuthenticated && <Sidebar />}
-      <main className="flex-grow">
+      <main className="flex-grow p-8">
         <Routes>
           {/* Routes publiques */}
           <Route element={<PublicRoutes />}>
@@ -38,6 +44,12 @@ const AppRoutes = () => {
           {/* Routes privées */}
           <Route element={<PrivateRoutes />}>
             <Route path="/profile" element={<Profile />} />
+            <Route path="/worksites" element={<Worksites />} />
+            <Route path="/artisans" element={<Artisans />} />
+            <Route path="/planification" element={<Planification />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
 
           {/* Route par défaut */}
