@@ -1,7 +1,3 @@
-# React TSX Template
-
-Ce projet est un template de démarrage pour une application React utilisant TypeScript, configurée avec Vite pour un développement rapide et TailwindCSS pour le style.
-
 ## Table des matières
 
 - [Prérequis](#prérequis)
@@ -9,7 +5,6 @@ Ce projet est un template de démarrage pour une application React utilisant Typ
 - [Scripts](#scripts)
 - [Structure du Projet](#structure-du-projet)
 - [Dépendances Principales](#dépendances-principales)
-- [Contribuer](#contribuer)
 
 ---
 
@@ -21,7 +16,7 @@ Ce projet est un template de démarrage pour une application React utilisant Typ
 
 1. Clonez ce repository :
   ```bash
-  git clone https://github.com/votre-utilisateur/react-tsx-template.git
+  git clone https://github.com/elliotfio/edifis-pro
   cd react-tsx-template
   ```
 
@@ -127,14 +122,4 @@ src/
 - 🛡️ Validation des formulaires avec Zod
 - 📝 Types TypeScript complets
 - 🎭 Animations fluides avec Framer Motion
-
-## Contribuer
-
-Les contributions sont les bienvenues ! Pour toute suggestion d'amélioration, veuillez ouvrir une issue ou une pull request.
-
----
-
-Développez votre application avec ce template et personnalisez-le selon vos besoins pour un démarrage rapide 🚀 !
-
-Ce `README.md` donne aux utilisateurs toutes les informations nécessaires pour démarrer, comprendre la structure, et personnaliser leur projet. 
 
