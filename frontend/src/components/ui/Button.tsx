@@ -12,8 +12,8 @@ interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-    primary: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 text-white",
-    secondary: "bg-gray-600 hover:bg-gray-700 focus:ring-gray-500 text-white",
+    primary: "bg-primary hover:bg-^rimary/90 focus:ring-primary text-white",
+    secondary: "bg-secondary hover:bg-secondary/90 focus:ring-secondary text-white",
     danger: "bg-red-600 hover:bg-red-700 focus:ring-red-500 text-white",
     success: "bg-green-600 hover:bg-green-700 focus:ring-green-500 text-white",
     warning: "bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-400 text-black",
