@@ -1,15 +1,14 @@
 const express = require('express');
-const mysql = require('mysql2')
+const mysql = require('mysql2');
 const dotenv = require('dotenv');
 
-dotenv.config
+dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-// Configuration CORS
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
@@ -17,7 +16,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Connexion à la base de données
+
 const pool = mysql.createPool({
     host: process.env.DB_HOST, 
     user: process.env.DB_USER,
@@ -26,19 +25,25 @@ const pool = mysql.createPool({
     port: process.env.DB_PORT,
 }).promise();
 
-// Routes
+
+const authRoutes = require('./src/routes/auth'); 
+
+
+app.use('/api/auth', authRoutes);
+
+
 app.get('/', (req, res) => {
     res.send("Bienvenue sur l'API");
 });
 
-// Gestion des erreurs
+
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('Une erreur est survenue!');
 });
 
-// Démarrage du serveur
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Serveur démarré sur le port ${PORT}`);
+    console.log(`🚀 Serveur démarré sur le port ${PORT}`);
 });
