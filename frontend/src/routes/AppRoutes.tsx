@@ -9,9 +9,10 @@ import Sidebar from '@/components/layout/Sidebar';
 import { useAuthStore } from '@/stores/authStore';
 import Loader from '@/components/ui/Loader';
 import { useAutoLogin } from '@/api/queries/authQueries';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 const AppRoutes = () => {
-  const { isAuthenticated } = useAuthStore();
+//   const { isAuthenticated } = useAuthStore();
+  const [isAuthenticated, _] = useState(true);
 
   const { refetch: autoLogin, isPending } = useAutoLogin();
 
