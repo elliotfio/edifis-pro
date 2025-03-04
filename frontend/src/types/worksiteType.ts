@@ -1,4 +1,4 @@
-export type WorksiteSpeciality = 
+export type WorksiteSpeciality =
     | "Plomberie"
     | "Électricité"
     | "Maçonnerie"
@@ -10,13 +10,23 @@ export type WorksiteSpeciality =
     | "Chauffage"
     | "Climatisation";
 
+export type WorksiteStatus =
+    | 'no_attributed'
+    | 'attributed'
+    | 'planned'
+    | 'in_progress'
+    | 'completed'
+    | 'archived'
+    | 'cancelled'
+    | 'blocked';
+
 export interface Worksite {
     id: string;
     name: string;
     address: string;
     startDate: string;
     endDate: string;
-    status: string;
+    status: WorksiteStatus;
     coordinates: [number, number];
     cost: number;
     budget: number;
@@ -35,3 +45,13 @@ export const WORKSITE_SPECIALITIES: WorksiteSpeciality[] = [
     "Chauffage",
     "Climatisation"
 ];
+
+export interface WorksiteInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
+    label: string;
+    name: string;
+    error?: string;
+    worksites: Worksite[];
+    value: string[];
+    onChange?: (value: string) => void;
+    isMulti?: boolean;
+}

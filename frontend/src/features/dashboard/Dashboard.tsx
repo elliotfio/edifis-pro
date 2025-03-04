@@ -11,9 +11,20 @@ import {
     TrendingUp,
     User2,
     UsersRound,
-    Wallet
+    Wallet,
 } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import {
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from 'recharts';
 
 const COLORS = ['#5D6ABD', '#EBF0FE', '#E7E895'];
 
@@ -108,36 +119,29 @@ const Dashboard = () => {
                 <div className="col-span-3 bg-white rounded-lg border border-gray-400 shadow-sm p-6 flex flex-col gap-4">
                     <div className="flex gap-2">
                         <ChartColumn size={20} />
-                        <h3 className="text-sm mb-4">
-                            Évolution du nombre de chantier par mois
-                        </h3>
+                        <h3 className="text-sm mb-4">Évolution du nombre de chantier par mois</h3>
                     </div>
                     <div className="h-[30vh]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={monthlyData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                <XAxis 
-                                    dataKey="month" 
-                                    axisLine={false}
-                                    tickLine={false}
-                                    dy={10}
+                                <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    vertical={false}
+                                    stroke="#E5E7EB"
                                 />
-                                <YAxis 
-                                    axisLine={false}
-                                    tickLine={false}
-                                    dx={-10}
-                                />
-                                <Tooltip 
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} dx={-10} />
+                                <Tooltip
                                     cursor={false}
                                     contentStyle={{
                                         backgroundColor: 'white',
                                         border: '1px solid #E5E7EB',
                                         borderRadius: '8px',
-                                        padding: '8px'
+                                        padding: '8px',
                                     }}
                                 />
-                                <Bar 
-                                    dataKey="count" 
+                                <Bar
+                                    dataKey="count"
                                     fill="#5D6ABD"
                                     radius={[4, 4, 0, 0]}
                                     maxBarSize={50}
@@ -177,17 +181,37 @@ const Dashboard = () => {
                                         content={({ payload }) => {
                                             if (!payload || !payload[0]) return null;
                                             const data = payload[0].payload;
-                                            const total = employeeData.reduce((sum, item) => sum + item.value, 0);
-                                            const percentage = ((data.value / total) * 100).toFixed(1);
+                                            const total = employeeData.reduce(
+                                                (sum, item) => sum + item.value,
+                                                0
+                                            );
+                                            const percentage = ((data.value / total) * 100).toFixed(
+                                                1
+                                            );
 
                                             const getIcon = (name: string) => {
                                                 switch (name) {
                                                     case 'Ouvrier':
-                                                        return <Pickaxe size={18} className="text-gray-600" />;
+                                                        return (
+                                                            <Pickaxe
+                                                                size={18}
+                                                                className="text-gray-600"
+                                                            />
+                                                        );
                                                     case 'Chef de chantier':
-                                                        return <HardHat size={18} className="text-gray-600" />;
+                                                        return (
+                                                            <HardHat
+                                                                size={18}
+                                                                className="text-gray-600"
+                                                            />
+                                                        );
                                                     case 'Employé administratif':
-                                                        return <User2 size={18} className="text-gray-600" />;
+                                                        return (
+                                                            <User2
+                                                                size={18}
+                                                                className="text-gray-600"
+                                                            />
+                                                        );
                                                     default:
                                                         return null;
                                                 }
@@ -197,14 +221,26 @@ const Dashboard = () => {
                                                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 min-w-[180px]">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         {getIcon(data.name)}
-                                                        <p className="text-sm font-medium">{data.name}</p>
+                                                        <p className="text-sm font-medium">
+                                                            {data.name}
+                                                        </p>
                                                     </div>
-                                                    <div 
-                                                        className="flex items-center justify-between p-2 rounded-md" 
-                                                        style={{ backgroundColor: COLORS[(payload[0] as any).dataIndex % COLORS.length] + '20' }}
+                                                    <div
+                                                        className="flex items-center justify-between p-2 rounded-md"
+                                                        style={{
+                                                            backgroundColor:
+                                                                COLORS[
+                                                                    (payload[0] as any).dataIndex %
+                                                                        COLORS.length
+                                                                ] + '20',
+                                                        }}
                                                     >
-                                                        <span className="text-xs text-gray-600">Effectif</span>
-                                                        <span className="text-sm font-semibold">{percentage}%</span>
+                                                        <span className="text-xs text-gray-600">
+                                                            Effectif
+                                                        </span>
+                                                        <span className="text-sm font-semibold">
+                                                            {percentage}%
+                                                        </span>
                                                     </div>
                                                 </div>
                                             );

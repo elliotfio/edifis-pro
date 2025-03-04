@@ -12,6 +12,14 @@ interface Location {
         road?: string;
         postcode?: string;
         city?: string;
+        address_line1?: string;
+        address_line2?: string;
+        town?: string;
+        village?: string;
+        municipality?: string;
+        suburb?: string;
+        neighbourhood?: string;
+        state?: string;
     };
 }
 
@@ -31,6 +39,13 @@ export function AddressInput({ label, error, value, onChange, disabled }: Addres
     const [isValidAddress, setIsValidAddress] = useState(false);
     const debouncedValue = useDebounce(inputValue, 500);
     const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (value !== undefined && value !== inputValue) {
+            setInputValue(value);
+            setIsValidAddress(true);
+        }
+    }, [value]);
 
     useEffect(() => {
         const fetchSuggestions = async () => {
@@ -76,8 +91,52 @@ export function AddressInput({ label, error, value, onChange, disabled }: Addres
     }, []);
 
     const formatAddress = (location: Location): string => {
-        // Retourne toujours la même adresse quelle que soit l'entrée
-        return '15 Rue de la Bastille, 75004 Paris';
+        console.log('Location data:', location); // Debug log
+
+        // Extraire les informations pertinentes de l'objet location
+        const {
+            address_line1,
+            address_line2,
+            road,
+            house_number,
+            city,
+            town,
+            village,
+            municipality,
+            postcode,
+            suburb,
+            neighbourhood,
+            state,
+        } = location.address || {};
+
+        // Construire l'adresse ligne par ligne
+        let addressParts = [];
+
+        // Ligne 1 : Numéro et rue
+        let streetAddress = '';
+        if (house_number) streetAddress += house_number + ' ';
+        if (road) streetAddress += road;
+        if (streetAddress) addressParts.push(streetAddress);
+
+        // Ligne 2 : Complément d'adresse
+        if (address_line2) addressParts.push(address_line2);
+
+        // Ville (utiliser la première valeur disponible)
+        const cityName = city || town || village || municipality || suburb || neighbourhood;
+
+        // Combiner ville et code postal
+        let locationPart = '';
+        if (cityName) locationPart += cityName;
+        if (postcode) locationPart += locationPart ? ` ${postcode}` : postcode;
+        if (locationPart) addressParts.push(locationPart);
+
+        // Si aucune information n'est disponible, utiliser le display_name
+        const formattedAddress = addressParts.length > 0 
+            ? addressParts.join(', ')
+            : location.display_name;
+
+        console.log('Formatted address:', formattedAddress); // Debug log
+        return formattedAddress;
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,7 +153,7 @@ export function AddressInput({ label, error, value, onChange, disabled }: Addres
         setIsValidAddress(true);
         onChange(
             formattedAddress,
-            [48.853533, 2.363112], // Coordonnées fixes de la Rue de la Bastille
+            [parseFloat(location.lat), parseFloat(location.lon)],
             true
         );
         setShowSuggestions(false);
@@ -105,7 +164,7 @@ export function AddressInput({ label, error, value, onChange, disabled }: Addres
             <Input
                 label={label}
                 name={label}
-                error={!isValidAddress ? 'Veuillez sélectionner une adresse dans la liste' : error}
+                error={!isValidAddress && inputValue ? 'Veuillez sélectionner une adresse dans la liste' : error}
                 value={inputValue}
                 onChange={handleInputChange}
                 onFocus={() => setShowSuggestions(true)}
@@ -130,7 +189,9 @@ export function AddressInput({ label, error, value, onChange, disabled }: Addres
                     ))}
                 </div>
             )}
-            <div className="absolute right-3 top-1/2 -translate-y-1/2"><MapPin size={20} className='text-gray-400' /></div>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <MapPin size={20} className="text-gray-400" />
+            </div>
         </div>
     );
 }
