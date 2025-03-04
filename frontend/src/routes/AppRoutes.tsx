@@ -7,6 +7,7 @@ import Dashboard from '@/features/dashboard/Dashboard';
 import Error from '@/features/Error';
 import Planification from '@/features/planification/Planification';
 import Settings from '@/features/settings/Settings';
+import Worksite from '@/features/show/Worksite/Worksite';
 import Profile from '@/features/user/Profile';
 import Worksites from '@/features/worksites/Worksites';
 import PrivateRoutes from '@/routes/PrivateRoutes';
@@ -45,6 +46,7 @@ const AppRoutes = () => {
           <Route element={<PrivateRoutes />}>
             <Route path="/profile" element={<Profile />} />
             <Route path="/worksites" element={<Worksites />} />
+            <Route path="/worksite/:id" element={<Worksite />} />
             <Route path="/artisans" element={<Artisans />} />
             <Route path="/planification" element={<Planification />} />
             <Route path="/dashboard" element={<Dashboard />} />

@@ -83,7 +83,7 @@ export default function Admin() {
 
     return (
         <div className="p-6">
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center gap-4 mb-6 ">
                 <div className="flex items-center gap-2">
                     <ShieldBan size={24} />
                     <span className="text-xl font-semibold">Panneau d'administration</span>
