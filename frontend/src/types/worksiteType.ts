@@ -6,4 +6,6 @@ export interface Worksite {
     endDate: string;
     status: string;
     coordinates: [number, number];
+    cost: number;
+    budget: number;
 }
