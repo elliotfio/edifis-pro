@@ -30,18 +30,20 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
     const { email, mot_de_passe } = req.body;
-    console.log("🔍 Requête reçue pour login :", req.body); // Vérifie que les données arrivent bien
+    console.log("🔍 Requête reçue pour login :", req.body); 
 
     try {
         const [[user]] = await pool.query('SELECT * FROM utilisateur WHERE email = ?', [email]);
-        console.log("📌 Utilisateur trouvé :", user); // Vérifie si l'utilisateur est trouvé
+        console.log("📌 Utilisateur trouvé :", user); 
 
         if (!user) {
             console.log("❌ Utilisateur non trouvé !");
             return res.status(400).json({ message: 'Identifiants incorrects' });
         }
-
+        console.log(" Mot de passe entré :", mot_de_passe);
+        console.log(" Mot de passe en base :", user.mot_de_passe);
         const passwordMatch = await bcrypt.compare(mot_de_passe, user.mot_de_passe);
+        
         console.log("🔑 Comparaison des mots de passe :", passwordMatch);
 
         if (!passwordMatch) {
