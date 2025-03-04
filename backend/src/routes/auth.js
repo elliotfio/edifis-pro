@@ -71,22 +71,45 @@ router.get('/users', async (req, res) => {
         res.status(500).json({ message: 'Erreur serveur', error: err });
     }
 });
+router.get('/users/:id', verifyToken, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const [[user]] = await pool.query('SELECT * FROM utilisateur WHERE id = ?', [userId]);
+
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        res.json(user); 
+    } catch (err) {
+        console.error("❌ Erreur lors de la récupération de l'utilisateur :", err);
+        res.status(500).json({ message: 'Erreur serveur', error: err });
+    }
+});
 
 router.delete('/users/:id', verifyToken, async (req, res) => {
     try {
         const userId = req.params.id;
-        //verif
         const [[user]] = await pool.query('SELECT * FROM utilisateur WHERE id = ?', [userId]);
         
         if (!user) {
-            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+            return res.status(404).json({ 
+                message: 'Utilisateur non trouvé',
+                details: `Aucun utilisateur avec l'ID ${userId} n'existe dans la base de données`
+            });
         }
-        await pool.query('DELETE FROM utilisateur WHERE id = ?', [userId]); //Supp
+        await pool.query('DELETE FROM utilisateur WHERE id = ?', [userId]);
         
-        res.json({ message: 'Utilisateur supprimer avec succès' });
+        res.json({ 
+            message: 'Utilisateur supprimé avec succès',
+            deletedUserId: userId
+        });
     } catch (err) {
-        console.error("❌ Erreur lors de la suppression :", err);
-        res.status(500).json({ message: 'Erreur serveur', error: err });
+        res.status(500).json({ 
+            message: 'Erreur serveur', 
+            error: err.message,
+            stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        });
     }
 });
 
