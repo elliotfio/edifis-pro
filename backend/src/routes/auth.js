@@ -27,4 +27,49 @@ router.post('/register', async (req, res) => {
 });
 
 
+
+router.post('/login', async (req, res) => {
+    const { email, mot_de_passe } = req.body;
+    console.log("🔍 Requête reçue pour login :", req.body); // Vérifie que les données arrivent bien
+
+    try {
+        const [[user]] = await pool.query('SELECT * FROM utilisateur WHERE email = ?', [email]);
+        console.log("📌 Utilisateur trouvé :", user); // Vérifie si l'utilisateur est trouvé
+
+        if (!user) {
+            console.log("❌ Utilisateur non trouvé !");
+            return res.status(400).json({ message: 'Identifiants incorrects' });
+        }
+
+        const passwordMatch = await bcrypt.compare(mot_de_passe, user.mot_de_passe);
+        console.log("🔑 Comparaison des mots de passe :", passwordMatch);
+
+        if (!passwordMatch) {
+            return res.status(400).json({ message: 'Identifiants incorrects' });
+        }
+
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        console.log("✅ Token généré :", token);
+
+        res.json({ token, user: { id: user.id, nom: user.nom } });
+
+    } catch (error) {
+        console.error("🔥 Erreur serveur :", error);
+        res.status(500).json({ message: 'Erreur serveur', error });
+    }
+});
+router.get('/users', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM utilisateur');
+        console.log("📋 Liste des utilisateurs :", rows);
+        res.json(rows);
+    } catch (err) {
+        console.error("❌ Erreur lors de la récupération :", err);
+        res.status(500).json({ message: 'Erreur serveur', error: err });
+    }
+});
+
+
 module.exports = router;
+
+
