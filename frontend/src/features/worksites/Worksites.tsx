@@ -10,7 +10,7 @@ import WorksitesList from './components/WorksitesList';
 import WorksitesMap from './components/WorksitesMap';
 
 export default function Worksites() {
-    const [view, setView] = useState<'list' | 'kanban' | 'map'>('map');
+    const [view, setView] = useState<'list' | 'kanban' | 'map'>('list');
     const [sortColumn, setSortColumn] = useState<keyof Worksite | null>(null);
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -88,7 +88,7 @@ export default function Worksites() {
             <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="flex gap-4 w-1/2">
                     <Searchbar onSearch={handleSearch} className="flex-1" />
-                    <Button variant="primary" className="w-auto">
+                    <Button variant="primary" className="w-auto gap-2">
                         <Plus size={16} />
                         <span>Ajouter un chantier</span>
                     </Button>
