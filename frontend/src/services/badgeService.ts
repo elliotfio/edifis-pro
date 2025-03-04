@@ -43,3 +43,33 @@ export const getColorStatus = (status: string) => {
             return 'bg-gray-100 text-gray-800';
     }
 }
+
+export const getRoleColor = (role: string) => {
+    switch (role.toLowerCase()) {
+        case 'admin':
+            return 'bg-purple-100 text-purple-800';
+        case 'chef':
+            return 'bg-blue-100 text-blue-800';
+        case 'artisan':
+            return 'bg-green-100 text-green-800';
+        case 'employe':
+            return 'bg-orange-100 text-orange-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+};
+
+export const formatRole = (role: string) => {
+    switch (role.toLowerCase()) {
+        case 'admin':
+            return 'Admin';
+        case 'chef':
+            return 'Chef de chantier';
+        case 'artisan':
+            return 'Artisan';
+        case 'employe':
+            return 'Employé';
+        default:
+            return role.charAt(0).toUpperCase() + role.slice(1);
+    }
+};

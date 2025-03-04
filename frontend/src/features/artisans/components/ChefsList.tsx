@@ -1,23 +1,29 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/Table';
 import { Eye, Pencil, Trash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatDateToDDMMYYYY } from '@/services/formattedDateService';
-import { getColorStatus, getLabelStatus } from '@/services/badgeService';
-import { Worksite } from '@/types/worksiteType';
 
-interface WorksitesListProps {
-    data: Worksite[];
-    sortColumn: keyof Worksite | null;
+interface Chef {
+    user_id: number;
+    years_experience: number;
+    chantiers_en_cours: number;
+    chantiers_termines: number;
+    specialites: string[];
+    disponible: boolean;
+    user: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        date_creation: string;
+    };
+}
+
+interface ChefsListProps {
+    data: Chef[];
+    sortColumn: string;
     sortDirection: 'asc' | 'desc' | null;
-    onSort: (column: keyof Worksite) => void;
+    onSort: (column: string) => void;
 }
 
 const truncateText = (text: string, maxLength: number = 32) => {
@@ -25,13 +31,15 @@ const truncateText = (text: string, maxLength: number = 32) => {
     return text.slice(0, maxLength) + '...';
 };
 
-export default function WorksitesList({
+export default function ChefsList({
     data,
     sortColumn,
     sortDirection,
-    onSort,
-}: WorksitesListProps) {
+    onSort
+}: ChefsListProps) {
     const navigate = useNavigate();
+
+    console.log(data);
 
     return (
         <div className="max-w-[80vw]">
@@ -40,35 +48,35 @@ export default function WorksitesList({
                     <TableRow>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'name' ? sortDirection : null}
-                            onClick={() => onSort('name')}
+                            sortDirection={sortColumn === 'nom' ? sortDirection : null}
+                            onClick={() => onSort('nom')}
                             className="w-[20%]"
                         >
-                            NOM DU PROJET
+                            NOM
                         </TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'address' ? sortDirection : null}
-                            onClick={() => onSort('address')}
+                            sortDirection={sortColumn === 'adresse' ? sortDirection : null}
+                            onClick={() => onSort('adresse')}
                             className="w-[25%]"
                         >
                             ADRESSE
                         </TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'startDate' ? sortDirection : null}
-                            onClick={() => onSort('startDate')}
+                            sortDirection={sortColumn === 'date_arrivee' ? sortDirection : null}
+                            onClick={() => onSort('date_arrivee')}
                             className="w-[14%]"
                         >
-                            DATE DE DÉBUT
+                            DATE D'ARRIVÉE
                         </TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'endDate' ? sortDirection : null}
-                            onClick={() => onSort('endDate')}
-                            className="w-[12%]"
+                            sortDirection={sortColumn === 'years_experience' ? sortDirection : null}
+                            onClick={() => onSort('years_experience')}
+                            className="w-[15%]"
                         >
-                            DATE DE FIN
+                            EXPÉRIENCE
                         </TableHead>
                         <TableHead
                             sortable
@@ -82,19 +90,29 @@ export default function WorksitesList({
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {data.map((worksite) => (
-                        <TableRow key={worksite.id} hover>
-                            <TableCell>{truncateText(worksite.name, 25)}</TableCell>
-                            <TableCell>{truncateText(worksite.address, 36)}</TableCell>
-                            <TableCell>{formatDateToDDMMYYYY(worksite.startDate)}</TableCell>
-                            <TableCell>{formatDateToDDMMYYYY(worksite.endDate)}</TableCell>
+                    {data.map((chef) => (
+                        <TableRow key={chef.user_id} hover>
+                            <TableCell>
+                                {truncateText(`${chef.user.firstName} ${chef.user.lastName}`, 25)}
+                            </TableCell>
+                            <TableCell>
+                                {truncateText(chef.user.email, 36)}
+                            </TableCell>
+                            <TableCell>
+                                {formatDateToDDMMYYYY(chef.user.date_creation)}
+                            </TableCell>
+                            <TableCell>
+                                {`${chef.years_experience} ans - ${chef.specialites[0].charAt(0).toUpperCase() + chef.specialites[0].slice(1)}`}
+                            </TableCell>
                             <TableCell>
                                 <span
-                                    className={`px-4 py-1 rounded-full text-sm ${getColorStatus(
-                                        worksite.status
-                                    )}`}
+                                    className={`px-4 py-1 rounded-full text-sm ${
+                                        chef.chantiers_en_cours < 4
+                                            ? 'bg-green-100 text-green-800'
+                                            : 'bg-orange-100 text-orange-800'
+                                    }`}
                                 >
-                                    {getLabelStatus(worksite.status)}
+                                    {chef.chantiers_en_cours < 4 ? 'Disponible' : 'Occupé'}
                                 </span>
                             </TableCell>
                             <TableCell className="flex items-center gap-2">
@@ -102,7 +120,7 @@ export default function WorksitesList({
                                     variant="primary"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        navigate(`/worksite/${worksite.id}`);
+                                        navigate(`/chef/${chef.user_id}`);
                                     }}
                                 >
                                     <Eye size={16} />

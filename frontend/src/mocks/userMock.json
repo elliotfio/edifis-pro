@@ -1,0 +1,125 @@
+{
+    "users": [
+        {
+            "id": 1,
+            "firstName": "Jean",
+            "lastName": "Dupont",
+            "email": "jean.dupont@edifis.fr",
+            "password": "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFuAZb3YQu4Cs",
+            "role": "admin",
+            "date_creation": "2024-01-20"
+        },
+        {
+            "id": 2,
+            "firstName": "Marie",
+            "lastName": "Martin",
+            "email": "marie.martin@edifis.fr",
+            "password": "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFuAZb3YQu4Cs",
+            "role": "employe",
+            "date_creation": "2024-01-20"
+        },
+        {
+            "id": 3,
+            "firstName": "Emmanuel",
+            "lastName": "Macron",
+            "email": "emmanuel.macron@edifis.fr",
+            "password": "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFuAZb3YQu4Cs",
+            "role": "artisan",
+            "date_creation": "2024-02-20"
+        },
+        {
+            "id": 4,
+            "firstName": "Sophie",
+            "lastName": "Petit",
+            "email": "sophie.petit@edifis.fr",
+            "password": "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFuAZb3YQu4Cs",
+            "role": "artisan",
+            "date_creation": "2024-02-20"
+        },
+        {
+            "id": 5,
+            "firstName": "Lucas",
+            "lastName": "Bernard",
+            "email": "lucas.bernard@edifis.fr",
+            "password": "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFuAZb3YQu4Cs",
+            "role": "artisan",
+            "date_creation": "2024-02-20"
+        },
+        {
+            "id": 6,
+            "firstName": "Thomas",
+            "lastName": "Dubois",
+            "email": "thomas.dubois@edifis.fr",
+            "password": "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFuAZb3YQu4Cs",
+            "role": "chef",
+            "date_creation": "2024-01-20"
+        },
+        {
+            "id": 7,
+            "firstName": "Julie",
+            "lastName": "Moreau",
+            "email": "julie.moreau@edifis.fr",
+            "password": "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFuAZb3YQu4Cs",
+            "role": "chef",
+            "date_creation": "2024-01-20"
+        },
+        {
+            "id": 8,
+            "firstName": "Pierre",
+            "lastName": "Lambert",
+            "email": "pierre.lambert@edifis.fr",
+            "password": "$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewFuAZb3YQu4Cs",
+            "role": "chef",
+            "date_creation": "2024-02-20"
+        }
+    ],
+    "artisans": [
+        {
+            "user_id": 3,
+            "specialites": ["menuiserie", "ébénisterie", "agencement"],
+            "disponible": true,
+            "note_moyenne": 4.8,
+            "nombre_chantiers": 15
+        },
+        {
+            "user_id": 4,
+            "specialites": ["plomberie", "chauffage", "climatisation"],
+            "disponible": true,
+            "note_moyenne": 4.5,
+            "nombre_chantiers": 12
+        },
+        {
+            "user_id": 5,
+            "specialites": ["électricité", "domotique"],
+            "disponible": true,
+            "note_moyenne": 4.9,
+            "nombre_chantiers": 8
+        }
+    ],
+    "chefs": [
+        {
+            "user_id": 6,
+            "years_experience": 15,
+            "chantiers_en_cours": 3,
+            "chantiers_termines": 45,
+            "specialites": ["menuiserie", "ébénisterie", "agencement"],
+            "disponible": true
+        },
+        {
+            "user_id": 7,
+            "years_experience": 8,
+            "chantiers_en_cours": 2,
+            "chantiers_termines": 25,
+            "specialites": ["menuiserie", "ébénisterie", "agencement"],
+            "disponible": false
+        },
+        {
+            "user_id": 8,
+            "years_experience": 12,
+            "chantiers_en_cours": 4,
+            "chantiers_termines": 35,
+            "specialites": ["menuiserie", "ébénisterie", "agencement"],
+            "disponible": true
+        }
+    ]
+}

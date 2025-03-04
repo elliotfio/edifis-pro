@@ -1,17 +1,16 @@
+import { useLayoutStore } from '@/stores/layoutStore';
 import { AnimatePresence, motion } from "framer-motion";
 import {
     CalendarDays,
     ChevronLeft,
     LayoutDashboard,
     LogOut,
+    Pickaxe,
     Settings,
     ShieldBan,
-    TrafficCone,
-    Users2
+    TrafficCone
 } from "lucide-react";
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useLayoutStore } from '@/stores/layoutStore';
 
 interface SidebarSection {
     title: string;
@@ -32,7 +31,7 @@ export default function Sidebar() {
             title: "LISTES",
             items: [
                 { icon: <TrafficCone size={20} />, label: "Chantiers", href: "/worksites" },
-                { icon: <Users2 size={20} />, label: "Artisans", href: "/artisans" }
+                { icon: <Pickaxe size={20} />, label: "Artisans", href: "/artisans" }
             ]
         },
         {
