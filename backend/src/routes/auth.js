@@ -85,7 +85,7 @@ router.delete('/users/:id', verifyToken, async (req, res) => {
         
         res.json({ message: 'Utilisateur supprimer avec succès' });
     } catch (err) {
-        console.error("❌ Erreur lors de la suppression :", err);
+        console.error(" Erreur lors de la suppression :", err);
         res.status(500).json({ message: 'Erreur serveur', error: err });
     }
 });
