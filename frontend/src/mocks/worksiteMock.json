@@ -1,0 +1,94 @@
+{
+    "worksites": [
+        {
+            "id": "1",
+            "name": "Rénovation Villa Méditerranée",
+            "address": "23 Avenue de la Plage, 13008 Marseille",
+            "startDate": "2024-03-01",
+            "endDate": "2024-06-15",
+            "status": "in_progress",
+            "coordinates": [43.2715, 5.3380]
+        },
+        {
+            "id": "2",
+            "name": "Construction Immeuble Le Pharo",
+            "address": "45 Boulevard Charles Livon, 13007 Marseille",
+            "startDate": "2024-04-01",
+            "endDate": "2025-02-28",
+            "status": "planned",
+            "coordinates": [43.2930, 5.3600]
+        },
+        {
+            "id": "3",
+            "name": "Réaménagement Bureau Joliette",
+            "address": "12 Quai de la Joliette, 13002 Marseille",
+            "startDate": "2024-03-15",
+            "endDate": "2024-05-30",
+            "status": "attributed",
+            "coordinates": [43.3040, 5.3650]
+        },
+        {
+            "id": "4",
+            "name": "Extension Maison Individuelle",
+            "address": "78 Rue du Rouet, 13006 Marseille",
+            "startDate": "2024-02-15",
+            "endDate": "2024-04-30",
+            "status": "in_progress",
+            "coordinates": [43.2960, 5.3730]
+        },
+        {
+            "id": "5",
+            "name": "Rénovation Restaurant Le Panier",
+            "address": "5 Place de Lenche, 13002 Marseille",
+            "startDate": "2024-01-10",
+            "endDate": "2024-03-01",
+            "status": "completed",
+            "coordinates": [43.2990, 5.3690]
+        },
+        {
+            "id": "6",
+            "name": "Construction École Primaire",
+            "address": "34 Avenue de Saint-Just, 13013 Marseille",
+            "startDate": "2024-06-01",
+            "endDate": "2025-08-31",
+            "status": "planned",
+            "coordinates": [43.3060, 5.3940]
+        },
+        {
+            "id": "7",
+            "name": "Réhabilitation Ancien Théâtre",
+            "address": "89 La Canebière, 13001 Marseille",
+            "startDate": "2024-01-05",
+            "endDate": "2024-02-28",
+            "status": "archived",
+            "coordinates": [43.2970, 5.3770]
+        },
+        {
+            "id": "8",
+            "name": "Aménagement Boutique Luxe",
+            "address": "15 Rue Paradis, 13001 Marseille",
+            "startDate": "2024-04-15",
+            "endDate": "2024-06-30",
+            "status": "attributed",
+            "coordinates": [43.2940, 5.3710]
+        },
+        {
+            "id": "9",
+            "name": "Construction Centre Commercial",
+            "address": "156 Avenue du Prado, 13008 Marseille",
+            "startDate": "2024-05-01",
+            "endDate": "2025-09-30",
+            "status": "planned",
+            "coordinates": [43.2680, 5.3420]
+        },
+        {
+            "id": "10",
+            "name": "Rénovation Hôtel Vieux-Port",
+            "address": "3 Quai des Belges, 13001 Marseille",
+            "startDate": "2024-03-20",
+            "endDate": "2024-07-15",
+            "status": "in_progress",
+            "coordinates": [43.2960, 5.3620]
+        }
+    ]
+}

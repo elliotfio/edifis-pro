@@ -23,3 +23,13 @@ body {
     --radius: 0.5rem;
   }
 }
+
+::-moz-selection {
+    background: #EBF0FE;
+    color: #5d6abd;
+}
+
+::selection {
+    background: #EBF0FE;
+    color: #5d6abd;
+}

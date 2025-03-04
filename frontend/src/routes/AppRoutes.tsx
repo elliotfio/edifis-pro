@@ -16,9 +16,12 @@ import Settings from '@/features/settings/Settings';
 import Artisans from '@/features/artisans/Artisans';
 import Planification from '@/features/planification/Planification';
 import Dashboard from '@/features/dashboard/Dashboard';
+import { useLayoutStore } from '@/stores/layoutStore';
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuthStore();
+  const { isExpanded } = useLayoutStore();
+
 
 //   const { refetch: autoLogin, isPending } = useAutoLogin();
 
@@ -33,7 +36,7 @@ const AppRoutes = () => {
   return (
     <div className="min-h-screen flex">
       {isAuthenticated && <Sidebar />}
-      <main className="flex-grow p-8">
+      <main className={`flex-grow p-8 transition-all duration-300 ${isExpanded ? 'ml-56' : 'ml-16'}`}>
         <Routes>
           {/* Routes publiques */}
           <Route element={<PublicRoutes />}>
