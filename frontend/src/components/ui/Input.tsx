@@ -35,7 +35,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                         {...props}
                     />
                     {rightIcon && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2">{rightIcon}</div>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 z-[50]">{rightIcon}</div>
                     )}
                 </div>
                 {error && <p className="mt-1 text-sm text-red-600">{error}</p>}

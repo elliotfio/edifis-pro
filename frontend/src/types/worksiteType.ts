@@ -1,3 +1,15 @@
+export type WorksiteSpeciality = 
+    | "Plomberie"
+    | "Électricité"
+    | "Maçonnerie"
+    | "Peinture"
+    | "Carrelage"
+    | "Menuiserie"
+    | "Couverture"
+    | "Isolation"
+    | "Chauffage"
+    | "Climatisation";
+
 export interface Worksite {
     id: string;
     name: string;
@@ -8,4 +20,18 @@ export interface Worksite {
     coordinates: [number, number];
     cost: number;
     budget: number;
+    specialities_needed: WorksiteSpeciality[];
 }
+
+export const WORKSITE_SPECIALITIES: WorksiteSpeciality[] = [
+    "Plomberie",
+    "Électricité",
+    "Maçonnerie",
+    "Peinture",
+    "Carrelage",
+    "Menuiserie",
+    "Couverture",
+    "Isolation",
+    "Chauffage",
+    "Climatisation"
+];

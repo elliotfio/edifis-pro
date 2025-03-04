@@ -201,7 +201,7 @@ const Dashboard = () => {
                                                     </div>
                                                     <div 
                                                         className="flex items-center justify-between p-2 rounded-md" 
-                                                        style={{ backgroundColor: COLORS[payload[0].dataIndex % COLORS.length] + '20' }}
+                                                        style={{ backgroundColor: COLORS[(payload[0] as any).dataIndex % COLORS.length] + '20' }}
                                                     >
                                                         <span className="text-xs text-gray-600">Effectif</span>
                                                         <span className="text-sm font-semibold">{percentage}%</span>
