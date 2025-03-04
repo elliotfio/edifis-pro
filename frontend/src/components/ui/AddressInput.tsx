@@ -95,7 +95,6 @@ export function AddressInput({ label, error, value, onChange, disabled }: Addres
 
         // Extraire les informations pertinentes de l'objet location
         const {
-            address_line1,
             address_line2,
             road,
             house_number,
@@ -106,7 +105,6 @@ export function AddressInput({ label, error, value, onChange, disabled }: Addres
             postcode,
             suburb,
             neighbourhood,
-            state,
         } = location.address || {};
 
         // Construire l'adresse ligne par ligne

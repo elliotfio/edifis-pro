@@ -1,5 +1,5 @@
 import { useLayoutStore } from '@/stores/layoutStore';
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from 'framer-motion';
 import {
     CalendarDays,
     ChevronLeft,
@@ -8,9 +8,9 @@ import {
     Pickaxe,
     Settings,
     ShieldBan,
-    TrafficCone
-} from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+    TrafficCone,
+} from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 interface SidebarSection {
     title: string;
@@ -28,36 +28,46 @@ export default function Sidebar() {
 
     const mainSections: SidebarSection[] = [
         {
-            title: "LISTES",
+            title: 'LISTES',
             items: [
-                { icon: <TrafficCone size={20} />, label: "Chantiers", href: "/worksites" },
-                { icon: <Pickaxe size={20} />, label: "Artisans", href: "/artisans" }
-            ]
+                { icon: <TrafficCone size={20} />, label: 'Chantiers', href: '/worksites' },
+                { icon: <Pickaxe size={20} />, label: 'Artisans', href: '/artisans' },
+            ],
         },
         {
-            title: "ADMINISTRATIF",
+            title: 'ADMINISTRATIF',
             items: [
-                { icon: <CalendarDays size={20} />, label: "Planification", href: "/planification" },
-                { icon: <LayoutDashboard size={20} />, label: "Dashboard", href: "/dashboard" }
-            ]
+                {
+                    icon: <CalendarDays size={20} />,
+                    label: 'Planification',
+                    href: '/planification',
+                },
+                { icon: <LayoutDashboard size={20} />, label: 'Dashboard', href: '/dashboard' },
+            ],
         },
         {
-            title: "ADMIN",
-            items: [
-                { icon: <ShieldBan size={20} />, label: "Gestion admin", href: "/admin" }
-            ]
-        }
+            title: 'ADMIN',
+            items: [{ icon: <ShieldBan size={20} />, label: 'Gestion admin', href: '/admin' }],
+        },
     ];
 
     const bottomSection: SidebarSection = {
-        title: "PERSONNEL",
+        title: 'PERSONNEL',
         items: [
-            { icon: <Settings size={20} />, label: "Settings", href: "/settings" },
-            { icon: <LogOut size={20} />, label: "Déconnexion", href: "/logout", color: "text-red-500" }
-        ]
+            { icon: <Settings size={20} />, label: 'Settings', href: '/settings' },
+            {
+                icon: <LogOut size={20} />,
+                label: 'Déconnexion',
+                href: '/logout',
+                color: 'text-red-500',
+            },
+        ],
     };
 
     const isLinkActive = (href: string) => {
+        if (href === '/worksites' && location.pathname.startsWith('/worksite/')) {
+            return true;
+        }
         return location.pathname === href;
     };
 
@@ -89,7 +99,7 @@ export default function Sidebar() {
                                     <motion.div
                                         layoutId="activeBackground"
                                         className="absolute inset-0 bg-secondary rounded-lg"
-                                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
@@ -97,7 +107,9 @@ export default function Sidebar() {
                                 )}
                             </AnimatePresence>
                             <motion.span
-                                animate={{ color: isActive ? "rgb(93, 106, 189)" : "rgb(156, 163, 175)" }}
+                                animate={{
+                                    color: isActive ? 'rgb(93, 106, 189)' : 'rgb(156, 163, 175)',
+                                }}
                                 transition={{ duration: 0.2, delay: isActive ? 0.1 : 0 }}
                                 className="relative z-10 flex-shrink-0"
                             >
@@ -107,16 +119,18 @@ export default function Sidebar() {
                                 {isExpanded && (
                                     <motion.span
                                         initial={{ opacity: 0, x: -10 }}
-                                        animate={{ 
-                                            opacity: 1, 
+                                        animate={{
+                                            opacity: 1,
                                             x: 0,
-                                            color: isActive ? "rgb(93, 106, 189)" : "rgb(75, 85, 99)"
+                                            color: isActive
+                                                ? 'rgb(93, 106, 189)'
+                                                : 'rgb(75, 85, 99)',
                                         }}
                                         exit={{ opacity: 0, x: -10 }}
-                                        transition={{ 
+                                        transition={{
                                             duration: 0.2,
                                             delay: isActive ? 0.1 : 0,
-                                            color: { delay: isActive ? 0.1 : 0 }
+                                            color: { delay: isActive ? 0.1 : 0 },
                                         }}
                                         className="relative z-10 text-sm whitespace-nowrap"
                                     >
@@ -134,8 +148,8 @@ export default function Sidebar() {
     return (
         <motion.aside
             animate={{
-                width: isExpanded ? "240px" : "72px",
-                transition: { duration: 0.3, ease: "easeInOut" }
+                width: isExpanded ? '240px' : '72px',
+                transition: { duration: 0.3, ease: 'easeInOut' },
             }}
             className="h-screen bg-white border-r border-gray-200 flex flex-col py-4 fixed left-0 top-0"
         >
@@ -172,14 +186,10 @@ export default function Sidebar() {
             {/* Main content with flex-col and justify-between */}
             <div className="flex flex-col justify-between flex-1 px-4">
                 {/* Top sections */}
-                <div className="space-y-6">
-                    {mainSections.map(renderSection)}
-                </div>
+                <div className="space-y-6">{mainSections.map(renderSection)}</div>
 
                 {/* Bottom section */}
-                <div className="pt-6">
-                    {renderSection(bottomSection)}
-                </div>
+                <div className="pt-6">{renderSection(bottomSection)}</div>
             </div>
         </motion.aside>
     );

@@ -1,31 +1,45 @@
-import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/Button';
 import Searchbar from '@/components/ui/Searchbar';
-import { Plus, Pickaxe, HardHat } from 'lucide-react';
-import ArtisansList from './components/ArtisansList';
 import mockData from '@/mocks/userMock.json';
+import { ArtisanUser, ChefUser } from '@/types/userType';
 import { AnimatePresence, motion } from 'framer-motion';
+import { HardHat, Pickaxe, Plus } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import ArtisansList from './components/ArtisansList';
 import ChefsList from './components/ChefsList';
 
 type SortDirection = 'asc' | 'desc' | null;
 
-
-// Combine users and artisans data
-const artisansData = mockData.artisans.map((artisan) => ({
-    ...artisan,
-    user: mockData.users.find((user) => user.id === artisan.user_id)!,
-}));
-
-const chefsData = mockData.chefs.map((chef) => ({
-    ...chef,
-    user: mockData.users.find((user) => user.id === chef.user_id)!,
-}));
+type UserWithRole = {
+    user: {
+        id: number;
+        firstName: string;
+        lastName: string;
+        email: string;
+    };
+    user_id: number;
+    specialites: string[];
+};
 
 export default function Artisans() {
     const [view, setView] = useState<'artisans' | 'chefs'>('artisans');
     const [sortColumn, setSortColumn] = useState<string>('nom');
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
     const [searchQuery, setSearchQuery] = useState('');
+    const [artisans, setArtisans] = useState(
+        mockData.artisans.map((artisan) => ({
+            ...artisan,
+            user: mockData.users.find((user) => user.id === artisan.user_id)!,
+            nombre_chantiers: artisan.history_worksite.length + (artisan.current_worksite ? 1 : 0),
+        }))
+    );
+    const [chefs, setChefs] = useState(
+        mockData.chefs.map((chef) => ({
+            ...chef,
+            user: mockData.users.find((user) => user.id === chef.user_id)!,
+        }))
+    );
+    const [deleteModalUser, setDeleteModalUser] = useState<UserWithRole | null>(null);
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
@@ -44,21 +58,40 @@ export default function Artisans() {
         }
     };
 
-    const filteredData = useMemo(() => {
-        const data = view === 'artisans' ? artisansData : chefsData;
-        
-        if (!searchQuery) return data;
-        
-        const searchLower = searchQuery.toLowerCase();
-        return data.filter((item) =>
-            `${item.user.firstName} ${item.user.lastName}`
-                .toLowerCase()
-                .includes(searchLower) ||
-            item.user.email.toLowerCase().includes(searchLower) ||
-            item.specialites.some((spec) => spec.toLowerCase().includes(searchLower))
-        );
-    }, [searchQuery, view]);
+    const handleDeleteClick = (user: UserWithRole) => {
+        setDeleteModalUser(user);
+    };
 
+    const handleDeleteConfirm = () => {
+        if (deleteModalUser) {
+            if (view === 'artisans') {
+                setArtisans((currentArtisans) =>
+                    currentArtisans.filter((artisan) => artisan.user_id !== deleteModalUser.user_id)
+                );
+            } else {
+                setChefs((currentChefs) =>
+                    currentChefs.filter((chef) => chef.user_id !== deleteModalUser.user_id)
+                );
+            }
+            setDeleteModalUser(null);
+        }
+    };
+
+    const filteredData = useMemo(() => {
+        const data = view === 'artisans' ? artisans : chefs;
+
+        if (!searchQuery) return data;
+
+        const searchLower = searchQuery.toLowerCase();
+        return data.filter(
+            (item) =>
+                `${item.user.firstName} ${item.user.lastName}`
+                    .toLowerCase()
+                    .includes(searchLower) ||
+                item.user.email.toLowerCase().includes(searchLower) ||
+                item.specialites.some((spec) => spec.toLowerCase().includes(searchLower))
+        );
+    }, [searchQuery, view, artisans, chefs]);
 
     return (
         <div className="p-6">
@@ -85,7 +118,7 @@ export default function Artisans() {
                                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                 animate={{
                                     width: '50%',
-                                    x: view === 'artisans' ? '0%' : '100%'
+                                    x: view === 'artisans' ? '0%' : '100%',
                                 }}
                             />
                         )}
@@ -121,18 +154,51 @@ export default function Artisans() {
 
             {view === 'artisans' ? (
                 <ArtisansList
-                    data={filteredData as typeof artisansData}
+                    data={filteredData as ArtisanUser[]}
                     sortColumn={sortColumn}
                     sortDirection={sortDirection}
                     onSort={handleSort}
+                    onDelete={handleDeleteClick}
                 />
             ) : (
                 <ChefsList
-                    data={filteredData as typeof chefsData}
+                    data={filteredData as ChefUser[]}
                     sortColumn={sortColumn}
                     sortDirection={sortDirection}
                     onSort={handleSort}
+                    onDelete={handleDeleteClick}
                 />
+            )}
+
+            {/* Modal de confirmation de suppression */}
+            {deleteModalUser && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-[400px]">
+                        <h3 className="text-lg font-semibold mb-2">
+                            Supprimer {view === 'artisans' ? "l'artisan" : 'le chef'}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                            Êtes-vous sûr de vouloir supprimer{' '}
+                            {view === 'artisans' ? "l'artisan" : 'le chef'}{' '}
+                            {deleteModalUser?.user.firstName} {deleteModalUser?.user.lastName} ?
+                            Cette action est irréversible.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                className="px-4 py-2 rounded hover:bg-gray-100"
+                                onClick={() => setDeleteModalUser(null)}
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                onClick={handleDeleteConfirm}
+                            >
+                                Supprimer
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

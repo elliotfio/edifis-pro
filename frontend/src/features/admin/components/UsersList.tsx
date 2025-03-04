@@ -7,9 +7,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/Table';
+import { formatRole, getRoleColor } from '@/services/badgeService';
 import { formatDateToDDMMYYYY } from '@/services/formattedDateService';
-import { getRoleColor, formatRole } from '@/services/badgeService';
 import { Eye, Pencil, Trash } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
     id: number;
@@ -28,6 +29,7 @@ interface UsersListProps {
 }
 
 export default function UsersList({ data, sortColumn, sortDirection, onSort }: UsersListProps) {
+    const navigate = useNavigate();
     return (
         <Table>
             <TableHeader>
@@ -40,11 +42,7 @@ export default function UsersList({ data, sortColumn, sortDirection, onSort }: U
                     >
                         Nom
                     </TableHead>
-                    <TableHead
-                        className="cursor-pointer w-[30%]"
-                    >
-                        Email
-                    </TableHead>
+                    <TableHead className="cursor-pointer w-[30%]">Email</TableHead>
                     <TableHead
                         sortable
                         sortDirection={sortColumn === 'date' ? sortDirection : null}
@@ -86,6 +84,7 @@ export default function UsersList({ data, sortColumn, sortDirection, onSort }: U
                                 variant="primary"
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    navigate(`/user/${user.id}`);
                                 }}
                             >
                                 <Eye size={16} />
