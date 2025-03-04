@@ -7,7 +7,9 @@
             "startDate": "2024-03-01",
             "endDate": "2024-06-15",
             "status": "in_progress",
-            "coordinates": [48.8584, 2.2945]
+            "coordinates": [48.8584, 2.2945],
+            "cost": 7853,
+            "budget": 15632
         },
         {
             "id": "2",
@@ -16,7 +18,9 @@
             "startDate": "2024-04-01",
             "endDate": "2025-02-28",
             "status": "planned",
-            "coordinates": [48.8918, 2.2427]
+            "coordinates": [48.8918, 2.2427],
+            "cost": 7853,
+            "budget": 15632
         },
         {
             "id": "3",
@@ -25,7 +29,9 @@
             "startDate": "2024-03-15",
             "endDate": "2024-05-30",
             "status": "attributed",
-            "coordinates": [48.8865, 2.3371]
+            "coordinates": [48.8865, 2.3371],
+            "cost": 7853,
+            "budget": 15632
         },
         {
             "id": "4",
@@ -34,7 +40,9 @@
             "startDate": "2024-05-01",
             "endDate": "2024-08-30",
             "status": "no_attributed",
-            "coordinates": [48.8532, 2.3698]
+            "coordinates": [48.8532, 2.3698],
+            "cost": 7853,
+            "budget": 15632
         },
         {
             "id": "5",
@@ -43,7 +51,9 @@
             "startDate": "2024-06-01",
             "endDate": "2025-03-15",
             "status": "planned",
-            "coordinates": [48.8049, 2.1204]
+            "coordinates": [48.8049, 2.1204],
+            "cost": 7853,
+            "budget": 15632
         },
         {
             "id": "6",
@@ -52,7 +62,9 @@
             "startDate": "2024-07-01",
             "endDate": "2024-12-31",
             "status": "attributed",
-            "coordinates": [45.7604, 4.8270]
+            "coordinates": [45.7604, 4.8270],
+            "cost": 7853,
+            "budget": 15632
         },
         {
             "id": "7",
@@ -61,7 +73,9 @@
             "startDate": "2024-04-15",
             "endDate": "2025-01-15",
             "status": "in_progress",
-            "coordinates": [48.8837, 2.2677]
+            "coordinates": [48.8837, 2.2677],
+            "cost": 7853,
+            "budget": 15632
         },
         {
             "id": "8",
@@ -70,7 +84,9 @@
             "startDate": "2024-05-15",
             "endDate": "2024-09-30",
             "status": "no_attributed",
-            "coordinates": [44.8378, -0.5792]
+            "coordinates": [44.8378, -0.5792],
+            "cost": 7853,
+            "budget": 15632
         },
         {
             "id": "9",
@@ -79,7 +95,9 @@
             "startDate": "2024-06-15",
             "endDate": "2025-04-30",
             "status": "planned",
-            "coordinates": [48.5835, 7.7459]
+            "coordinates": [48.5835, 7.7459],
+            "cost": 7853,
+            "budget": 15632
         },
         {
             "id": "10",
@@ -88,7 +106,9 @@
             "startDate": "2024-03-30",
             "endDate": "2024-07-15",
             "status": "in_progress",
-            "coordinates": [48.8339, 2.2400]
+            "coordinates": [48.8339, 2.2400],
+            "cost": 7853,
+            "budget": 15632
         }
     ]
 }
