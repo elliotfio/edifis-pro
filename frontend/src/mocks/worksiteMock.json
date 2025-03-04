@@ -1,0 +1,94 @@
+{
+    "worksites": [
+        {
+            "id": "1",
+            "name": "Rénovation Tour Eiffel",
+            "address": "5 Avenue Anatole France, 75007 Paris",
+            "startDate": "2024-03-01",
+            "endDate": "2024-06-15",
+            "status": "in_progress",
+            "coordinates": [48.8584, 2.2945]
+        },
+        {
+            "id": "2",
+            "name": "Construction Immeuble La Défense",
+            "address": "1 Parvis de la Défense, 92800 Puteaux",
+            "startDate": "2024-04-01",
+            "endDate": "2025-02-28",
+            "status": "planned",
+            "coordinates": [48.8918, 2.2427]
+        },
+        {
+            "id": "3",
+            "name": "Réaménagement Bureaux Montmartre",
+            "address": "12 Rue Lepic, 75018 Paris",
+            "startDate": "2024-03-15",
+            "endDate": "2024-05-30",
+            "status": "attributed",
+            "coordinates": [48.8865, 2.3371]
+        },
+        {
+            "id": "4",
+            "name": "Rénovation Appartements Bastille",
+            "address": "15 Rue de la Bastille, 75004 Paris",
+            "startDate": "2024-05-01",
+            "endDate": "2024-08-30",
+            "status": "no_attributed",
+            "coordinates": [48.8532, 2.3698]
+        },
+        {
+            "id": "5",
+            "name": "Construction Centre Commercial Versailles",
+            "address": "2 Avenue de Paris, 78000 Versailles",
+            "startDate": "2024-06-01",
+            "endDate": "2025-03-15",
+            "status": "planned",
+            "coordinates": [48.8049, 2.1204]
+        },
+        {
+            "id": "6",
+            "name": "Rénovation Cathédrale de Lyon",
+            "address": "6 Place Saint-Jean, 69005 Lyon",
+            "startDate": "2024-07-01",
+            "endDate": "2024-12-31",
+            "status": "attributed",
+            "coordinates": [45.7604, 4.8270]
+        },
+        {
+            "id": "7",
+            "name": "Construction École Neuilly",
+            "address": "23 Avenue Charles de Gaulle, 92200 Neuilly-sur-Seine",
+            "startDate": "2024-04-15",
+            "endDate": "2025-01-15",
+            "status": "in_progress",
+            "coordinates": [48.8837, 2.2677]
+        },
+        {
+            "id": "8",
+            "name": "Rénovation Villa Bordeaux",
+            "address": "45 Cours de l'Intendance, 33000 Bordeaux",
+            "startDate": "2024-05-15",
+            "endDate": "2024-09-30",
+            "status": "no_attributed",
+            "coordinates": [44.8378, -0.5792]
+        },
+        {
+            "id": "9",
+            "name": "Construction Hôtel Strasbourg",
+            "address": "12 Place Kléber, 67000 Strasbourg",
+            "startDate": "2024-06-15",
+            "endDate": "2025-04-30",
+            "status": "planned",
+            "coordinates": [48.5835, 7.7459]
+        },
+        {
+            "id": "10",
+            "name": "Réaménagement Bureaux Boulogne",
+            "address": "8 Avenue André Morizet, 92100 Boulogne-Billancourt",
+            "startDate": "2024-03-30",
+            "endDate": "2024-07-15",
+            "status": "in_progress",
+            "coordinates": [48.8339, 2.2400]
+        }
+    ]
+}
