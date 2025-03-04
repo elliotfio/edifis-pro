@@ -21,6 +21,7 @@ interface WorksitesListProps {
     sortDirection: 'asc' | 'desc' | null;
     onSort: (column: keyof Worksite) => void;
     onUpdate: (worksite: Worksite) => void;
+    onDelete: (worksite: Worksite) => void;
     onAddWorksite: (newWorksite: Partial<Worksite>) => void;
 }
 
@@ -35,6 +36,7 @@ export default function WorksitesList({
     sortDirection,
     onSort,
     onUpdate,
+    onDelete,
 }: WorksitesListProps) {
     const navigate = useNavigate();
     const [selectedWorksite, setSelectedWorksite] = useState<Worksite | null>(null);
@@ -137,6 +139,7 @@ export default function WorksitesList({
                                         variant="primary"
                                         onClick={(e) => {
                                             e.stopPropagation();
+                                            onDelete(worksite);
                                         }}
                                     >
                                         <Trash size={16} />

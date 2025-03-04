@@ -1,79 +1,34 @@
-"use client"
-
-import type React from "react"
-import { useEffect, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import React from 'react';
 
 interface ModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title: string
-  children: React.ReactNode
-  maxWidth?: string
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm?: () => void;
+    title: string;
+    message?: string;
+    children?: React.ReactNode;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidth = "max-w-md" }) => {
-  const modalRef = useRef<HTMLDivElement>(null)
+export default function Modal({ isOpen, onClose, onConfirm, title, message, children }: ModalProps) {
+    if (!isOpen) return null;
 
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose()
-      }
-    }
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscape)
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape)
-    }
-  }, [isOpen, onClose])
-
-  const handleOutsideClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      onClose()
-    }
-  }
-
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4"
-          onClick={handleOutsideClick}
-        >
-          <motion.div
-            ref={modalRef}
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className={`${maxWidth} w-full bg-white rounded-lg shadow-xl`}
-          >
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-                <button
-                  onClick={onClose}
-                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <span className="sr-only">Fermer</span>
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div className="mt-2">{children}</div>
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[400px]">
+                <h2 className="text-xl font-semibold mb-4">{title}</h2>
+                {message && <p className="text-gray-600 mb-6">{message}</p>}
+                {children}
+                <div className="flex justify-end gap-3">
+                    <button className="bg-transparent hover:bg-gray-200 text-gray-900 font-bold py-2 px-4 rounded" onClick={onClose}>
+                        Annuler
+                    </button>
+                    {onConfirm && (
+                        <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={onConfirm}>
+                            Supprimer
+                        </button>
+                    )}
+                </div>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
+        </div>
+    );
 }
-

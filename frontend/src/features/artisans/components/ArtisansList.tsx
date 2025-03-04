@@ -1,28 +1,23 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/Table';
+import { formatDateToDDMMYYYY } from '@/services/formattedDateService';
+import { ArtisanUser } from '@/types/userType';
 import { Eye, Pencil, Trash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { formatDateToDDMMYYYY } from '@/services/formattedDateService';
-
-interface Artisan {
-    user_id: number;
-    specialites: string[];
-    disponible: boolean;
-    note_moyenne: number;
-    nombre_chantiers: number;
-    user: {
-        firstName: string;
-        lastName: string;
-        email: string;
-        date_creation: string;
-    };
-}
 
 interface ArtisansListProps {
-    data: Artisan[];
+    data: ArtisanUser[];
     sortColumn: string;
     sortDirection: 'asc' | 'desc' | null;
     onSort: (column: string) => void;
+    onDelete: (artisan: ArtisanUser) => void;
 }
 
 const truncateText = (text: string, maxLength: number = 32) => {
@@ -34,7 +29,8 @@ export default function ArtisansList({
     data,
     sortColumn,
     sortDirection,
-    onSort
+    onSort,
+    onDelete,
 }: ArtisansListProps) {
     const navigate = useNavigate();
 
@@ -92,9 +88,7 @@ export default function ArtisansList({
                             <TableCell>
                                 {truncateText(`${artisan.user.firstName} ${artisan.user.lastName}`)}
                             </TableCell>
-                            <TableCell>
-                                {truncateText(artisan.user.email, 40)}
-                            </TableCell>
+                            <TableCell>{truncateText(artisan.user.email, 40)}</TableCell>
                             <TableCell>
                                 {formatDateToDDMMYYYY(artisan.user.date_creation)}
                             </TableCell>
@@ -121,7 +115,7 @@ export default function ArtisansList({
                                     variant="primary"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        navigate(`/artisan/${artisan.user_id}`);
+                                        navigate(`/user/${artisan.user_id}`);
                                     }}
                                 >
                                     <Eye size={16} />
@@ -138,6 +132,7 @@ export default function ArtisansList({
                                     variant="primary"
                                     onClick={(e) => {
                                         e.stopPropagation();
+                                        onDelete(artisan);
                                     }}
                                 >
                                     <Trash size={16} />

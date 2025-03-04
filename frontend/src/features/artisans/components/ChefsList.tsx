@@ -1,29 +1,23 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
 import { Button } from '@/components/ui/Button';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/Table';
+import { formatDateToDDMMYYYY } from '@/services/formattedDateService';
+import { ChefUser } from '@/types/userType';
 import { Eye, Pencil, Trash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { formatDateToDDMMYYYY } from '@/services/formattedDateService';
-
-interface Chef {
-    user_id: number;
-    years_experience: number;
-    chantiers_en_cours: number;
-    chantiers_termines: number;
-    specialites: string[];
-    disponible: boolean;
-    user: {
-        firstName: string;
-        lastName: string;
-        email: string;
-        date_creation: string;
-    };
-}
 
 interface ChefsListProps {
-    data: Chef[];
+    data: ChefUser[];
     sortColumn: string;
     sortDirection: 'asc' | 'desc' | null;
     onSort: (column: string) => void;
+    onDelete: (chef: ChefUser) => void;
 }
 
 const truncateText = (text: string, maxLength: number = 32) => {
@@ -35,7 +29,8 @@ export default function ChefsList({
     data,
     sortColumn,
     sortDirection,
-    onSort
+    onSort,
+    onDelete,
 }: ChefsListProps) {
     const navigate = useNavigate();
 
@@ -95,14 +90,13 @@ export default function ChefsList({
                             <TableCell>
                                 {truncateText(`${chef.user.firstName} ${chef.user.lastName}`, 25)}
                             </TableCell>
+                            <TableCell>{truncateText(chef.user.email, 36)}</TableCell>
+                            <TableCell>{formatDateToDDMMYYYY(chef.user.date_creation)}</TableCell>
                             <TableCell>
-                                {truncateText(chef.user.email, 36)}
-                            </TableCell>
-                            <TableCell>
-                                {formatDateToDDMMYYYY(chef.user.date_creation)}
-                            </TableCell>
-                            <TableCell>
-                                {`${chef.years_experience} ans - ${chef.specialites[0].charAt(0).toUpperCase() + chef.specialites[0].slice(1)}`}
+                                {`${chef.years_experience} ans - ${
+                                    chef.specialites[0].charAt(0).toUpperCase() +
+                                    chef.specialites[0].slice(1)
+                                }`}
                             </TableCell>
                             <TableCell>
                                 <span
@@ -120,7 +114,7 @@ export default function ChefsList({
                                     variant="primary"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        navigate(`/chef/${chef.user_id}`);
+                                        navigate(`/user/${chef.user_id}`);
                                     }}
                                 >
                                     <Eye size={16} />
@@ -137,6 +131,7 @@ export default function ChefsList({
                                     variant="primary"
                                     onClick={(e) => {
                                         e.stopPropagation();
+                                        onDelete(chef);
                                     }}
                                 >
                                     <Trash size={16} />

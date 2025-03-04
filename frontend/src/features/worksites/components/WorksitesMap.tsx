@@ -56,7 +56,7 @@ const MapComponent = ({ data }: MapComponentProps) => {
                                         </span>
                                     </div>
                                     <Link
-                                        to={`/worksites/${worksite.id}`}
+                                        to={`/worksite/${worksite.id}`}
                                         className="flex items-center justify-center gap-2 w-full bg-primary py-2 px-4 rounded-md group"
                                     >
                                         <span className="text-white">Voir le chantier</span>

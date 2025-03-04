@@ -3,12 +3,12 @@ import Searchbar from '@/components/ui/Searchbar';
 import worksiteMockData from '@/mocks/worksiteMock.json';
 import { Worksite } from '@/types/worksiteType';
 import { AnimatePresence, motion } from 'framer-motion';
-import { MapPin, Pause, Plus, TrafficCone } from 'lucide-react';
+import { List, MapPin, Plus, LayoutGrid } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import AddWorksite from './components/AddWorksite';
 import WorksitesKanban from './components/WorksitesKanban';
 import WorksitesList from './components/WorksitesList';
 import WorksitesMap from './components/WorksitesMap';
-import AddWorksite from './components/AddWorksite';
 
 export default function Worksites() {
     const [view, setView] = useState<'list' | 'kanban' | 'map'>('list');
@@ -17,6 +17,7 @@ export default function Worksites() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [worksites, setWorksites] = useState<Worksite[]>(worksiteMockData.worksites as Worksite[]);
+    const [deleteModalWorksite, setDeleteModalWorksite] = useState<Worksite | null>(null);
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
@@ -34,48 +35,46 @@ export default function Worksites() {
         );
     };
 
+    const handleDeleteClick = (worksite: Worksite) => {
+        setDeleteModalWorksite(worksite);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (deleteModalWorksite) {
+            setWorksites(currentWorksites => 
+                currentWorksites.filter(worksite => worksite.id !== deleteModalWorksite.id)
+            );
+            setDeleteModalWorksite(null);
+        }
+    };
+
     const handleSort = (column: keyof Worksite) => {
         if (sortColumn === column) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+            setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
         } else {
             setSortColumn(column);
             setSortDirection('asc');
         }
     };
 
-    const filteredData = useMemo(() => {
-        if (!searchQuery) return worksites;
-
-        const searchLower = searchQuery.toLowerCase();
-        return worksites.filter(
-            (worksite) =>
-                worksite.name.toLowerCase().includes(searchLower) ||
-                worksite.address.toLowerCase().includes(searchLower)
-        );
-    }, [searchQuery, worksites]);
-
     const sortedData = useMemo(() => {
-        if (!sortColumn || !sortDirection) return filteredData;
+        let filtered = [...worksites];
+        if (searchQuery) {
+            const searchLower = searchQuery.toLowerCase();
+            filtered = filtered.filter(
+                worksite =>
+                    worksite.name.toLowerCase().includes(searchLower) ||
+                    worksite.address.toLowerCase().includes(searchLower)
+            );
+        }
 
-        return [...filteredData].sort((a, b) => {
-            const aValue = a[sortColumn];
-            const bValue = b[sortColumn];
-
-            if (typeof aValue === 'string' && typeof bValue === 'string') {
-                return sortDirection === 'asc'
-                    ? aValue.localeCompare(bValue)
-                    : bValue.localeCompare(aValue);
+        return filtered.sort((a, b) => {
+            if (sortDirection === 'asc') {
+                return a[sortColumn] > b[sortColumn] ? 1 : -1;
             }
-
-            if (aValue instanceof Date && bValue instanceof Date) {
-                return sortDirection === 'asc'
-                    ? aValue.getTime() - bValue.getTime()
-                    : bValue.getTime() - aValue.getTime();
-            }
-
-            return 0;
+            return a[sortColumn] < b[sortColumn] ? 1 : -1;
         });
-    }, [filteredData, sortColumn, sortDirection]);
+    }, [worksites, searchQuery, sortColumn, sortDirection]);
 
     const renderView = () => {
         switch (view) {
@@ -87,6 +86,7 @@ export default function Worksites() {
                         sortDirection={sortDirection}
                         onSort={handleSort}
                         onUpdate={handleUpdateWorksite}
+                        onDelete={handleDeleteClick}
                         onAddWorksite={handleAddWorksite}
                     />
                 );
@@ -103,11 +103,10 @@ export default function Worksites() {
         <div className="p-6">
             <div className="flex items-center gap-4 mb-6">
                 <div className="flex items-center gap-2">
-                    <TrafficCone size={24} strokeWidth={1.7} />
+                    <MapPin size={24} strokeWidth={1.7} />
                     <span className="text-xl font-semibold">Chantiers</span>
                 </div>
             </div>
-
             <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="flex gap-4 w-1/2">
                     <Searchbar onSearch={handleSearch} className="flex-1" />
@@ -116,7 +115,6 @@ export default function Worksites() {
                         <span>Ajouter un chantier</span>
                     </Button>
                 </div>
-
                 <div className="flex p-1 relative">
                     <AnimatePresence>
                         {view && (
@@ -126,12 +124,12 @@ export default function Worksites() {
                                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                 animate={{
                                     width: '33.333333%',
-                                    left:
+                                    x:
                                         view === 'list'
                                             ? '0%'
                                             : view === 'kanban'
-                                            ? '33.333333%'
-                                            : '66.666667%',
+                                            ? '100%'
+                                            : '200%',
                                 }}
                             />
                         )}
@@ -145,7 +143,7 @@ export default function Worksites() {
                             className="flex gap-2 items-center"
                             transition={{ duration: 0.2, delay: view === 'list' ? 0.1 : 0 }}
                         >
-                            <Pause size={22} className="rotate-90" strokeWidth={1.7} />
+                            <List size={22} strokeWidth={1.7} />
                             <span className="font-medium">Liste</span>
                         </motion.div>
                     </button>
@@ -158,7 +156,7 @@ export default function Worksites() {
                             className="flex gap-2 items-center"
                             transition={{ duration: 0.2, delay: view === 'kanban' ? 0.1 : 0 }}
                         >
-                            <Pause size={22} strokeWidth={1.7} />
+                            <LayoutGrid size={22} strokeWidth={1.7} />
                             <span className="font-medium">Kanban</span>
                         </motion.div>
                     </button>
@@ -171,7 +169,7 @@ export default function Worksites() {
                             className="flex gap-2 items-center"
                             transition={{ duration: 0.2, delay: view === 'map' ? 0.1 : 0 }}
                         >
-                            <MapPin size={20} strokeWidth={1.7} />
+                            <MapPin size={22} strokeWidth={1.7} />
                             <span className="font-medium">Carte</span>
                         </motion.div>
                     </button>
@@ -185,6 +183,32 @@ export default function Worksites() {
                 onClose={() => setIsAddModalOpen(false)}
                 onAddWorksite={handleAddWorksite}
             />
+
+            {/* Modal de confirmation de suppression */}
+            {deleteModalWorksite && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-[400px]">
+                        <h3 className="text-lg font-semibold mb-2">Supprimer le chantier</h3>
+                        <p className="text-gray-600 mb-6">
+                            Êtes-vous sûr de vouloir supprimer le chantier "{deleteModalWorksite.name}" ? Cette action est irréversible.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button 
+                                className="px-4 py-2 rounded hover:bg-gray-100"
+                                onClick={() => setDeleteModalWorksite(null)}
+                            >
+                                Annuler
+                            </button>
+                            <button 
+                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                onClick={handleDeleteConfirm}
+                            >
+                                Supprimer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
