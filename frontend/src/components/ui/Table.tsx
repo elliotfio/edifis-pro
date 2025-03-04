@@ -20,8 +20,8 @@ export const Table: React.FC<TableProps> = ({
 }
  
   return (
-    <div className="overflow-x-auto rounded-md">
-      <table className={`min-w-full divide-y divide-gray-100 ${variantClasses[variant]} ${className}`}>
+    <div className="w-full rounded-md">
+      <table className={`w-full divide-y divide-gray-100 ${variantClasses[variant]} ${className}`}>
         {children}
       </table>
     </div>

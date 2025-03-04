@@ -33,3 +33,21 @@ body {
     background: #EBF0FE;
     color: #5d6abd;
 }
+
+/* ::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+
+::-webkit-scrollbar-thumb {
+    border-radius: 2rem;
+    background: #EBF0FE;
+} */
+
+::-webkit-scrollbar {
+    display: none;
+}

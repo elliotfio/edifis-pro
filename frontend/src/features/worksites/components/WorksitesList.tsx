@@ -9,15 +9,9 @@ import {
 } from '@/components/ui/Table';
 import { Eye, Pencil, Trash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-interface Worksite {
-    id: string;
-    name: string;
-    address: string;
-    startDate: string;
-    endDate: string;
-    status: string;
-}
+import { formatDateToDDMMYYYY } from '@/services/formattedDateService';
+import { getColorStatus, getLabelStatus } from '@/services/badgeService';
+import { Worksite } from '@/types/worksiteType';
 
 interface WorksitesListProps {
     data: Worksite[];
@@ -42,6 +36,7 @@ export default function WorksitesList({
                         sortable
                         sortDirection={sortColumn === 'name' ? sortDirection : null}
                         onClick={() => onSort('name')}
+                        className="w-[20%]"
                     >
                         NOM DU PROJET
                     </TableHead>
@@ -49,6 +44,7 @@ export default function WorksitesList({
                         sortable
                         sortDirection={sortColumn === 'address' ? sortDirection : null}
                         onClick={() => onSort('address')}
+                        className="w-[30%]"
                     >
                         ADRESSE
                     </TableHead>
@@ -56,6 +52,7 @@ export default function WorksitesList({
                         sortable
                         sortDirection={sortColumn === 'startDate' ? sortDirection : null}
                         onClick={() => onSort('startDate')}
+                        className="w-[15%]"
                     >
                         DATE DE DÉBUT
                     </TableHead>
@@ -63,11 +60,19 @@ export default function WorksitesList({
                         sortable
                         sortDirection={sortColumn === 'endDate' ? sortDirection : null}
                         onClick={() => onSort('endDate')}
+                        className="w-[15%]"
                     >
                         DATE DE FIN
                     </TableHead>
-                    <TableHead>STATUS</TableHead>
-                    <TableHead>ACTIONS</TableHead>
+                    <TableHead
+                        sortable
+                        sortDirection={sortColumn === 'status' ? sortDirection : null}
+                        onClick={() => onSort('status')}
+                        className="w-[10%]"
+                    >
+                        STATUS
+                    </TableHead>
+                    <TableHead className='w-[10%]'>ACTIONS</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -75,11 +80,15 @@ export default function WorksitesList({
                     <TableRow key={worksite.id} hover>
                         <TableCell>{worksite.name}</TableCell>
                         <TableCell>{worksite.address}</TableCell>
-                        <TableCell>{worksite.startDate}</TableCell>
-                        <TableCell>{worksite.endDate}</TableCell>
+                        <TableCell>{formatDateToDDMMYYYY(worksite.startDate)}</TableCell>
+                        <TableCell>{formatDateToDDMMYYYY(worksite.endDate)}</TableCell>
                         <TableCell>
-                            <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                                {worksite.status}
+                            <span
+                                className={`px-4 py-1 rounded-full text-sm ${getColorStatus(
+                                    worksite.status
+                                )}`}
+                            >
+                                {getLabelStatus(worksite.status)}
                             </span>
                         </TableCell>
                         <TableCell className="flex items-center gap-2">
