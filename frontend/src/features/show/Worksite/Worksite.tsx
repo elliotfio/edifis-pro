@@ -3,20 +3,22 @@ import { Worksite as WorksiteType } from '@/types/worksiteType';
 import { formatDateToDDMMYYYY } from '@/services/formattedDateService';
 import { getColorStatus, getLabelStatus } from '@/services/badgeService';
 import worksiteMockData from '@/mocks/worksiteMock.json';
+import userMockData from '@/mocks/userMock.json';
 import { LatLngExpression, divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
 import {
     ArrowLeft,
+    ArrowRight,
     Calendar,
     CreditCard,
     Glasses,
-    HardHat,
     Pickaxe,
     PiggyBank,
-    User,
+    Users,
 } from 'lucide-react';
 import ReactDOMServer from 'react-dom/server';
+import { Link } from 'react-router-dom';
 
 // Custom marker icon
 const customIcon = divIcon({
@@ -131,69 +133,123 @@ export default function Worksite() {
                 </MapContainer>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-lg border border-gray-400 shadow-sm p-4 flex flex-col gap-4">
-                    <div className="flex gap-2 items-center">
-                        <HardHat size={28} strokeWidth={1.7} />
-                        <h2 className="font-medium">Jean michel</h2>
-                    </div>
-                    <div
-                        className={`px-3 py-1 rounded-full text-sm text-center bg-red-100 text-red-800`}
-                    >
-                        Chef de chantier
-                    </div>
+            {/* Équipe */}
+            <div className="bg-white rounded-lg border border-gray-400 shadow-sm p-4 mb-8">
+                <div className="flex gap-2 items-center mb-4">
+                    <Users size={20} />
+                    <h2 className="font-medium">Équipe sur le chantier</h2>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-400 shadow-sm p-4 flex flex-col gap-4">
-                    <div className="flex gap-2 items-center">
-                        <Pickaxe size={28} strokeWidth={1.7} />
-                        <h2 className="font-medium">Jean michel</h2>
-                    </div>
-                    <div className="flex gap-2">
-                        <div
-                            className={`px-3 py-1 rounded-full text-sm text-center bg-blue-100 text-blue-800`}
-                        >
-                            Ouvrier
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Chefs */}
+                    <div>
+                        <h3 className="text-lg font-medium mb-3">Chefs de chantier</h3>
+                        <div className="space-y-3">
+                            {userMockData.chefs
+                                .filter((chef) => chef.current_worksite === id)
+                                .map((chef) => {
+                                    const user = userMockData.users.find(
+                                        (u) => u.id === chef.user_id
+                                    );
+                                    if (!user) return null;
+
+                                    return (
+                                        <Link
+                                            to={`/user/${user.id}`}
+                                            key={user.id}
+                                            className="block p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors duration-200"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <div className="font-medium">
+                                                        {user.firstName} {user.lastName}
+                                                    </div>
+                                                    <div className="text-sm text-gray-600">
+                                                        {chef.years_experience} ans d'expérience
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div
+                                                        className={`px-2 py-1 rounded-full text-xs ${
+                                                            chef.disponible
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : 'bg-red-100 text-red-800'
+                                                        }`}
+                                                    >
+                                                        {chef.disponible
+                                                            ? 'Disponible'
+                                                            : 'Indisponible'}
+                                                    </div>
+                                                    <ArrowRight
+                                                        size={16}
+                                                        className="text-primary"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+                            {userMockData.chefs.filter((chef) => chef.current_worksite === id)
+                                .length === 0 && (
+                                <div className="text-gray-600 text-sm">
+                                    Aucun chef de chantier assigné
+                                </div>
+                            )}
                         </div>
-                        <div
-                            className={`px-3 py-1 rounded-full text-sm text-center bg-purple-100 text-purple-800`}
-                        >
-                            Menuiserie
-                        </div>
                     </div>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-400 shadow-sm p-4 flex flex-col gap-4">
-                    <div className="flex gap-2 items-center">
-                        <Pickaxe size={28} strokeWidth={1.7} />
-                        <h2 className="font-medium">Jean michel</h2>
-                    </div>
-                    <div className="flex gap-2">
-                        <div
-                            className={`px-3 py-1 rounded-full text-sm text-center bg-blue-100 text-blue-800`}
-                        >
-                            Ouvrier
-                        </div>
-                        <div
-                            className={`px-3 py-1 rounded-full text-sm text-center bg-purple-100 text-purple-800`}
-                        >
-                            Plomberie
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-white rounded-lg border border-gray-400 shadow-sm p-4 flex flex-col gap-4">
-                    <div className="flex gap-2 items-center">
-                        <Pickaxe size={28} strokeWidth={1.7} />
-                        <h2 className="font-medium">Jean michel</h2>
-                    </div>
-                    <div className="flex gap-2">
-                        <div
-                            className={`px-3 py-1 rounded-full text-sm text-center bg-blue-100 text-blue-800`}
-                        >
-                            Ouvrier
-                        </div>
-                        <div
-                            className={`px-3 py-1 rounded-full text-sm text-center bg-purple-100 text-purple-800`}
-                        >
-                            Carrelage
+
+                    {/* Artisans */}
+                    <div>
+                        <h3 className="text-lg font-medium mb-3">Ouvriers</h3>
+                        <div className="space-y-3">
+                            {userMockData.artisans
+                                .filter((artisan) => artisan.current_worksite === id)
+                                .map((artisan) => {
+                                    const user = userMockData.users.find(
+                                        (u) => u.id === artisan.user_id
+                                    );
+                                    if (!user) return null;
+
+                                    return (
+                                        <Link
+                                            to={`/user/${user.id}`}
+                                            key={user.id}
+                                            className="block p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors duration-200"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <div className="font-medium">
+                                                        {user.firstName} {user.lastName}
+                                                    </div>
+                                                    <div className="text-sm text-gray-600">
+                                                        {artisan.specialites.join(', ')}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div
+                                                        className={`px-2 py-1 rounded-full text-xs ${
+                                                            artisan.disponible
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : 'bg-red-100 text-red-800'
+                                                        }`}
+                                                    >
+                                                        {artisan.disponible
+                                                            ? 'Disponible'
+                                                            : 'Indisponible'}
+                                                    </div>
+                                                    <ArrowRight
+                                                        size={16}
+                                                        className="text-primary"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+                            {userMockData.artisans.filter(
+                                (artisan) => artisan.current_worksite === id
+                            ).length === 0 && (
+                                <div className="text-gray-600 text-sm">Aucun ouvrier assigné</div>
+                            )}
                         </div>
                     </div>
                 </div>

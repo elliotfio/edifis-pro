@@ -7,6 +7,7 @@ import Dashboard from '@/features/dashboard/Dashboard';
 import Error from '@/features/Error';
 import Planification from '@/features/planification/Planification';
 import Settings from '@/features/settings/Settings';
+import User from '@/features/show/User/User';
 import Worksite from '@/features/show/Worksite/Worksite';
 import Profile from '@/features/user/Profile';
 import Worksites from '@/features/worksites/Worksites';
@@ -48,6 +49,7 @@ const AppRoutes = () => {
             <Route path="/worksites" element={<Worksites />} />
             <Route path="/worksite/:id" element={<Worksite />} />
             <Route path="/artisans" element={<Artisans />} />
+            <Route path="/user/:id" element={<User />} />
             <Route path="/planification" element={<Planification />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<Admin />} />

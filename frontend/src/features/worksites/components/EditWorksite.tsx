@@ -1,7 +1,7 @@
 import { AddressInput } from '@/components/ui/AddressInput';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Modal } from '@/components/ui/Modal';
+import Modal from '@/components/ui/Modal';
 import { SelectInput } from '@/components/ui/SelectInput';
 import { Worksite, WORKSITE_SPECIALITIES, WorksiteSpeciality } from '@/types/worksiteType';
 import { WorksiteEditFormData, worksiteEditSchema } from '@/validators/worksiteValidator';
