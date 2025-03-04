@@ -1,13 +1,12 @@
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { loginSchema, type LoginFormData } from "@/validators/loginValidator"
-import { Link } from "react-router-dom"
-import { motion } from "framer-motion"
 import { useLogin } from "@/api/queries/authQueries"
-import { Input } from "@/components/ui/Input"
 import { Button } from "@/components/ui/Button"
 import { Card } from "@/components/ui/Card"
-import { Badge } from "@/components/ui/Badge"
+import { Input } from "@/components/ui/Input"
+import { loginSchema, type LoginFormData } from "@/validators/loginValidator"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { motion } from "framer-motion"
+import { useForm } from "react-hook-form"
+import { Link } from "react-router-dom"
 
 
 
