@@ -1,15 +1,15 @@
+import { useLayoutStore } from '@/stores/layoutStore';
 import { AnimatePresence, motion } from "framer-motion";
 import {
     CalendarDays,
     ChevronLeft,
     LayoutDashboard,
     LogOut,
+    Pickaxe,
     Settings,
     ShieldBan,
-    TrafficCone,
-    Users2
+    TrafficCone
 } from "lucide-react";
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 interface SidebarSection {
@@ -23,7 +23,7 @@ interface SidebarSection {
 }
 
 export default function Sidebar() {
-    const [isExpanded, setIsExpanded] = useState(true);
+    const { isExpanded, toggleSidebar } = useLayoutStore();
     const location = useLocation();
 
     const mainSections: SidebarSection[] = [
@@ -31,7 +31,7 @@ export default function Sidebar() {
             title: "LISTES",
             items: [
                 { icon: <TrafficCone size={20} />, label: "Chantiers", href: "/worksites" },
-                { icon: <Users2 size={20} />, label: "Artisans", href: "/artisans" }
+                { icon: <Pickaxe size={20} />, label: "Artisans", href: "/artisans" }
             ]
         },
         {
@@ -132,19 +132,21 @@ export default function Sidebar() {
     );
 
     return (
-        <motion.div
-            animate={{ width: isExpanded ? "280px" : "70px" }}
-            transition={{ duration: 0.3 }}
-            className="h-screen relative bg-white border-r border-gray-100 py-6 flex flex-col"
+        <motion.aside
+            animate={{
+                width: isExpanded ? "240px" : "72px",
+                transition: { duration: 0.3, ease: "easeInOut" }
+            }}
+            className="h-screen bg-white border-r border-gray-200 flex flex-col py-4 fixed left-0 top-0"
         >
             {/* Toggle Button */}
             <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="absolute -right-3 top-8 bg-primary border border-gray-200 p-1.5 rounded-full text-white hover:bg-primary/90 transition-colors"
+                onClick={toggleSidebar}
+                className={`absolute -right-3 top-6 p-1.5 rounded-full bg-primary border border-gray-200 hover:bg-primary/90 transition-colors ${
+                    !isExpanded && 'rotate-180'
+                }`}
             >
-                <motion.div animate={{ rotate: isExpanded ? 0 : 180 }} transition={{ duration: 0.3 }}>
-                    <ChevronLeft size={16} />
-                </motion.div>
+                <ChevronLeft size={16} color="white" />
             </button>
 
             {/* Profile Section */}
@@ -179,6 +181,6 @@ export default function Sidebar() {
                     {renderSection(bottomSection)}
                 </div>
             </div>
-        </motion.div>
+        </motion.aside>
     );
 }

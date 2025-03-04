@@ -1,24 +1,24 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import PrivateRoutes from '@/routes/PrivateRoutes';
-import PublicRoutes from '@/routes/PublicRoutes';
+import Sidebar from '@/components/layout/Sidebar';
+import Admin from '@/features/admin/Admin';
+import Artisans from '@/features/artisans/Artisans';
 import Login from '@/features/auth/Login';
 import Register from '@/features/auth/Register';
-import Profile from '@/features/user/Profile';
-import Error from '@/features/Error';
-import Sidebar from '@/components/layout/Sidebar';
-import { useAuthStore } from '@/stores/authStore';
-import Loader from '@/components/ui/Loader';
-import { useAutoLogin } from '@/api/queries/authQueries';
-import { useEffect, useState } from 'react';
-import Worksites from '@/features/worksites/Worksites';
-import Admin from '@/features/admin/Admin';
-import Settings from '@/features/settings/Settings';
-import Artisans from '@/features/artisans/Artisans';
-import Planification from '@/features/planification/Planification';
 import Dashboard from '@/features/dashboard/Dashboard';
+import Error from '@/features/Error';
+import Planification from '@/features/planification/Planification';
+import Settings from '@/features/settings/Settings';
+import Profile from '@/features/user/Profile';
+import Worksites from '@/features/worksites/Worksites';
+import PrivateRoutes from '@/routes/PrivateRoutes';
+import PublicRoutes from '@/routes/PublicRoutes';
+import { useAuthStore } from '@/stores/authStore';
+import { useLayoutStore } from '@/stores/layoutStore';
+import { Navigate, Route, Routes } from 'react-router-dom';
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuthStore();
+  const { isExpanded } = useLayoutStore();
+
 
 //   const { refetch: autoLogin, isPending } = useAutoLogin();
 
@@ -33,7 +33,7 @@ const AppRoutes = () => {
   return (
     <div className="min-h-screen flex">
       {isAuthenticated && <Sidebar />}
-      <main className="flex-grow p-8">
+      <main className={`flex-grow p-8 transition-all duration-300 ${isExpanded ? 'ml-56' : 'ml-16'}`}>
         <Routes>
           {/* Routes publiques */}
           <Route element={<PublicRoutes />}>

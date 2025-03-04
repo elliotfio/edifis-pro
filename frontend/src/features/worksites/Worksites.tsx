@@ -1,32 +1,15 @@
 import { Button } from '@/components/ui/Button';
 import Searchbar from '@/components/ui/Searchbar';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/Table';
+import worksiteMockData from '@/mocks/worksiteMock.json';
+import { Worksite } from '@/types/worksiteType';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Eye, MapPin, Pause, Pencil, Plus, TrafficCone, Trash } from 'lucide-react';
+import { MapPin, Pause, Plus, TrafficCone } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-interface Worksite {
-    id: string;
-    projectName: string;
-    address: string;
-    startDate: string;
-    endDate: string;
-    status: string;
-}
-
-const mockData: Worksite[] = Array(10).fill(null).map((_, i) => ({
-    id: i.toString(),
-    projectName: "Emmanuel Macron",
-    address: "13 Rue Jean Macé, Marseille 13010",
-    startDate: "03/03/2024",
-    endDate: "03/03/2024",
-    status: "En cours"
-}));
-
+import WorksitesKanban from './components/WorksitesKanban';
+import WorksitesList from './components/WorksitesList';
+import WorksitesMap from './components/WorksitesMap';
 
 export default function Worksites() {
-    const navigate = useNavigate();
     const [view, setView] = useState<'list' | 'kanban' | 'map'>('list');
     const [sortColumn, setSortColumn] = useState<keyof Worksite | null>(null);
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
@@ -45,13 +28,16 @@ export default function Worksites() {
         }
     };
 
+    const mockData = worksiteMockData.worksites as Worksite[];
+
     const filteredData = useMemo(() => {
         if (!searchQuery) return mockData;
 
         const searchLower = searchQuery.toLowerCase();
-        return mockData.filter((worksite) => 
-            worksite.projectName.toLowerCase().includes(searchLower) ||
-            worksite.address.toLowerCase().includes(searchLower)
+        return mockData.filter(
+            (worksite) =>
+                worksite.name.toLowerCase().includes(searchLower) ||
+                worksite.address.toLowerCase().includes(searchLower)
         );
     }, [searchQuery]);
 
@@ -70,6 +56,26 @@ export default function Worksites() {
         });
     }, [filteredData, sortColumn, sortDirection]);
 
+    const renderView = () => {
+        switch (view) {
+            case 'list':
+                return (
+                    <WorksitesList
+                        data={sortedData}
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
+                    />
+                );
+            case 'kanban':
+                return <WorksitesKanban data={sortedData} />;
+            case 'map':
+                return <WorksitesMap data={sortedData} />;
+            default:
+                return null;
+        }
+    };
+
     return (
         <div className="p-6">
             <div className="flex items-center gap-4 mb-6">
@@ -82,12 +88,9 @@ export default function Worksites() {
             <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="flex gap-4 w-1/2">
                     <Searchbar onSearch={handleSearch} className="flex-1" />
-                    <Button
-                        variant="primary"
-                        className="w-auto"
-                        >
-                            <Plus size={16} />
-                            <span>Ajouter un chantier</span>
+                    <Button variant="primary" className="w-auto gap-2">
+                        <Plus size={16} />
+                        <span>Ajouter un chantier</span>
                     </Button>
                 </div>
 
@@ -97,10 +100,15 @@ export default function Worksites() {
                             <motion.div
                                 layoutId="activeViewBackground"
                                 className="absolute inset-y-1 bg-primary rounded-lg"
-                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                 animate={{
-                                    width: "33.333333%",
-                                    left: view === 'list' ? '0%' : view === 'kanban' ? '33.333333%' : '66.666667%'
+                                    width: '33.333333%',
+                                    left:
+                                        view === 'list'
+                                            ? '0%'
+                                            : view === 'kanban'
+                                            ? '33.333333%'
+                                            : '66.666667%',
                                 }}
                             />
                         )}
@@ -145,80 +153,9 @@ export default function Worksites() {
                         </motion.div>
                     </button>
                 </div>
-
             </div>
 
-            <Table variant="default" className="rounded-md cursor-default">
-                <TableHeader sticky>
-                    <TableRow>
-                        <TableHead
-                            sortable
-                            sortDirection={sortColumn === 'projectName' ? sortDirection : null}
-                            onClick={() => handleSort('projectName')}
-                        >
-                            NOM DU PROJET
-                        </TableHead>
-                        <TableHead
-                            sortable
-                            sortDirection={sortColumn === 'address' ? sortDirection : null}
-                            onClick={() => handleSort('address')}
-                        >
-                            ADRESSE
-                        </TableHead>
-                        <TableHead
-                            sortable
-                            sortDirection={sortColumn === 'startDate' ? sortDirection : null}
-                            onClick={() => handleSort('startDate')}
-                        >
-                            DATE DE DÉBUT
-                        </TableHead>
-                        <TableHead
-                            sortable
-                            sortDirection={sortColumn === 'endDate' ? sortDirection : null}
-                            onClick={() => handleSort('endDate')}
-                        >
-                            DATE DE FIN
-                        </TableHead>
-                        <TableHead>STATUS</TableHead>
-                        <TableHead>ACTIONS</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {sortedData.map((worksite) => (
-                        <TableRow key={worksite.id} hover>
-                            <TableCell>{worksite.projectName}</TableCell>
-                            <TableCell>{worksite.address}</TableCell>
-                            <TableCell>{worksite.startDate}</TableCell>
-                            <TableCell>{worksite.endDate}</TableCell>
-                            <TableCell>
-                                <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                                    {worksite.status}
-                                </span>
-                            </TableCell>
-                            <TableCell className="flex items-center gap-2">
-                                <Button variant="primary" onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/worksite/${worksite.id}`);
-                                }}>
-                                    <Eye size={16} />
-                                </Button>
-                                <Button variant="primary" onClick={(e) => {
-                                    e.stopPropagation();
-                                    // Handle edit
-                                }}>
-                                    <Pencil size={16} />
-                                </Button>
-                                <Button variant="primary" onClick={(e) => {
-                                    e.stopPropagation();
-                                    // Handle delete
-                                }}>
-                                    <Trash size={16} />
-                                </Button>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+            {renderView()}
         </div>
     );
 }
