@@ -8,15 +8,30 @@ import { useMemo, useState } from 'react';
 import WorksitesKanban from './components/WorksitesKanban';
 import WorksitesList from './components/WorksitesList';
 import WorksitesMap from './components/WorksitesMap';
+import AddWorksite from './components/AddWorksite';
 
 export default function Worksites() {
     const [view, setView] = useState<'list' | 'kanban' | 'map'>('list');
-    const [sortColumn, setSortColumn] = useState<keyof Worksite | null>(null);
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+    const [sortColumn, setSortColumn] = useState<keyof Worksite>('name');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
     const [searchQuery, setSearchQuery] = useState('');
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [worksites, setWorksites] = useState<Worksite[]>(worksiteMockData.worksites as Worksite[]);
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
+    };
+
+    const handleAddWorksite = (newWorksite: Partial<Worksite>) => {
+        setWorksites(prev => [...prev, newWorksite as Worksite]);
+    };
+
+    const handleUpdateWorksite = (updatedWorksite: Worksite) => {
+        setWorksites(currentWorksites => 
+            currentWorksites.map(worksite => 
+                worksite.id === updatedWorksite.id ? updatedWorksite : worksite
+            )
+        );
     };
 
     const handleSort = (column: keyof Worksite) => {
@@ -28,18 +43,16 @@ export default function Worksites() {
         }
     };
 
-    const mockData = worksiteMockData.worksites as Worksite[];
-
     const filteredData = useMemo(() => {
-        if (!searchQuery) return mockData;
+        if (!searchQuery) return worksites;
 
         const searchLower = searchQuery.toLowerCase();
-        return mockData.filter(
+        return worksites.filter(
             (worksite) =>
                 worksite.name.toLowerCase().includes(searchLower) ||
                 worksite.address.toLowerCase().includes(searchLower)
         );
-    }, [searchQuery]);
+    }, [searchQuery, worksites]);
 
     const sortedData = useMemo(() => {
         if (!sortColumn || !sortDirection) return filteredData;
@@ -48,11 +61,19 @@ export default function Worksites() {
             const aValue = a[sortColumn];
             const bValue = b[sortColumn];
 
-            if (sortDirection === 'asc') {
-                return aValue > bValue ? 1 : -1;
-            } else {
-                return aValue < bValue ? 1 : -1;
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                return sortDirection === 'asc'
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
             }
+
+            if (aValue instanceof Date && bValue instanceof Date) {
+                return sortDirection === 'asc'
+                    ? aValue.getTime() - bValue.getTime()
+                    : bValue.getTime() - aValue.getTime();
+            }
+
+            return 0;
         });
     }, [filteredData, sortColumn, sortDirection]);
 
@@ -65,6 +86,8 @@ export default function Worksites() {
                         sortColumn={sortColumn}
                         sortDirection={sortDirection}
                         onSort={handleSort}
+                        onUpdate={handleUpdateWorksite}
+                        onAddWorksite={handleAddWorksite}
                     />
                 );
             case 'kanban':
@@ -88,7 +111,7 @@ export default function Worksites() {
             <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="flex gap-4 w-1/2">
                     <Searchbar onSearch={handleSearch} className="flex-1" />
-                    <Button variant="primary" className="w-auto gap-2">
+                    <Button variant="primary" className="w-auto gap-2" onClick={() => setIsAddModalOpen(true)}>
                         <Plus size={16} />
                         <span>Ajouter un chantier</span>
                     </Button>
@@ -156,6 +179,12 @@ export default function Worksites() {
             </div>
 
             {renderView()}
+
+            <AddWorksite
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onAddWorksite={handleAddWorksite}
+            />
         </div>
     );
 }
