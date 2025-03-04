@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db'); 
 require('dotenv').config();
+const verifyToken = require('../middleware/jwtAuth');
 
 const router = express.Router();
 
@@ -69,6 +70,23 @@ router.get('/users', async (req, res) => {
     }
 });
 
+router.delete('/users/:id', verifyToken, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        //verif
+        const [[user]] = await pool.query('SELECT * FROM utilisateur WHERE id = ?', [userId]);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+        await pool.query('DELETE FROM utilisateur WHERE id = ?', [userId]); //Supp
+        
+        res.json({ message: 'Utilisateur supprimer avec succès' });
+    } catch (err) {
+        console.error("❌ Erreur lors de la suppression :", err);
+        res.status(500).json({ message: 'Erreur serveur', error: err });
+    }
+});
 
 module.exports = router;
 
