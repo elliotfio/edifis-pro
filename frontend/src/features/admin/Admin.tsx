@@ -228,7 +228,6 @@ export default function Admin() {
             <AddUser 
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
-                onAdd={handleAddUser}
             />
 
             {editingUser && (
