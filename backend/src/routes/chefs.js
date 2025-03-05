@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
 router.get('/:user_id', async (req, res) => {
     try {
         const userId = req.params.user_id;
-        const [[chef]] = await pool.query(`
+        const [[chef]] = await db.query(`
             SELECT c.*, u.firstName, u.lastName, u.email, u.role, u.date_creation
             FROM chef c
             INNER JOIN users u ON c.user_id = u.id

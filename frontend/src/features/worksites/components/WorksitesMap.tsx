@@ -24,49 +24,51 @@ const customIcon = divIcon({
 });
 
 const MapComponent = ({ data }: MapComponentProps) => {
-    const defaultCenter: LatLngExpression = [48.8566, 2.3522]; // Coordonnées de Paris par défaut
-
+    const defaultCenter: LatLngExpression = [43.7102, 7.2620]; // Coordonnées de Nice par défaut
     return (
         <div>
             <MapContainer
                 center={defaultCenter}
-                zoom={12}
+                zoom={8}
                 style={{ height: '74vh', width: '100%', borderRadius: '8px' }}
                 zoomControl={false}
                 attributionControl={false}
             >
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-                {data.map((worksite) => (
-                    <Marker
-                        key={worksite.id}
-                        position={worksite.coordinates as LatLngExpression}
-                        icon={customIcon}
-                    >
-                        <Popup>
-                            <div className="p-2 min-w-[250px]">
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <Building2 size={16} className="text-primary" />
-                                        <span className="font-medium">{worksite.name}</span>
+                {data.map((worksite) => {
+                    const position: LatLngExpression = [worksite.coordinates.x, worksite.coordinates.y];
+                    return (
+                        <Marker
+                            key={worksite.id}
+                            position={position}
+                            icon={customIcon}
+                        >
+                            <Popup>
+                                <div className="p-2 min-w-[250px]">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <Building2 size={16} className="text-primary" />
+                                            <span className="font-medium">{worksite.name}</span>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <MapPin size={16} className="text-primary flex-shrink-0" />
+                                            <span className="text-gray-600 text-sm">
+                                                {worksite.address}
+                                            </span>
+                                        </div>
+                                        <Link
+                                            to={`/worksite/${worksite.id}`}
+                                            className="flex items-center justify-center gap-2 w-full bg-primary py-2 px-4 rounded-md group"
+                                        >
+                                            <span className="text-white">Voir le chantier</span>
+                                            <ArrowRight size={16} color='white' className='group-hover:translate-x-1 transition-all duration-300' />
+                                        </Link>
                                     </div>
-                                    <div className="flex items-start gap-2">
-                                        <MapPin size={16} className="text-primary flex-shrink-0" />
-                                        <span className="text-gray-600 text-sm">
-                                            {worksite.address}
-                                        </span>
-                                    </div>
-                                    <Link
-                                        to={`/worksite/${worksite.id}`}
-                                        className="flex items-center justify-center gap-2 w-full bg-primary py-2 px-4 rounded-md group"
-                                    >
-                                        <span className="text-white">Voir le chantier</span>
-                                        <ArrowRight size={16} color='white' className='group-hover:translate-x-1 transition-all duration-300' />
-                                    </Link>
                                 </div>
-                            </div>
-                        </Popup>
-                    </Marker>
-                ))}
+                            </Popup>
+                        </Marker>
+                    );
+                })}
             </MapContainer>
         </div>
     );
