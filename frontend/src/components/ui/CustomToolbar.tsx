@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/Button"
 import { ToolbarProps, View } from "react-big-calendar"
 import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { useState, memo, useCallback } from 'react';
 import { format } from 'date-fns';
 import Searchbar from '@/components/ui/Searchbar';
 import { fr } from 'date-fns/locale';
@@ -11,16 +11,22 @@ interface CustomToolbarProps<TEvent extends object> extends ToolbarProps<TEvent>
     searchValue: string;
 }
 
-function CustomToolbar<TEvent extends { start: Date; end: Date }>({ label, onNavigate, onView, view, onSearch, searchValue }: CustomToolbarProps<TEvent>) {
+const CustomToolbar = memo(<TEvent extends { start: Date; end: Date }>({ 
+    label, 
+    onNavigate, 
+    onView, 
+    view, 
+    onSearch, 
+    searchValue 
+}: CustomToolbarProps<TEvent>) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [searchQuery, setSearchQuery] = useState('');
 
-    const toggleDropdown = () => {
+    const toggleDropdown = useCallback(() => {
         setDropdownOpen(!dropdownOpen);
-    };
+    }, [dropdownOpen]);
 
-    const handleNavigate = (direction: 'PREV' | 'NEXT') => {
+    const handleNavigate = useCallback((direction: 'PREV' | 'NEXT') => {
         const newDate = new Date(currentDate);
         if (direction === 'PREV') {
             newDate.setDate(newDate.getDate() - 7);
@@ -29,9 +35,9 @@ function CustomToolbar<TEvent extends { start: Date; end: Date }>({ label, onNav
         }
         setCurrentDate(newDate);
         onNavigate(direction);
-    };
+    }, [currentDate, onNavigate]);
 
-    const getDateLabel = () => {
+    const getDateLabel = useCallback(() => {
         switch (view) {
             case 'month': {
                 const monthYear = format(currentDate, 'MMMM yyyy', { locale: fr });
@@ -44,12 +50,7 @@ function CustomToolbar<TEvent extends { start: Date; end: Date }>({ label, onNav
             default:
                 return format(currentDate, "'Semaine du' dd MMMM yyyy", { locale: fr });
         }
-    };
-
-    const handleSearch = (query: string) => {
-        console.log('Search query:', query);
-        setSearchQuery(query);
-    };
+    }, [view, currentDate]);
 
     return (
         <div className="flex justify-between items-center mb-4 gap-8">
@@ -59,7 +60,11 @@ function CustomToolbar<TEvent extends { start: Date; end: Date }>({ label, onNav
                     <span className="text-2xl font-bold leading-none">{format(currentDate, 'd')}</span>
                 </div>
                 <div className="flex-grow max-w-md">
-                    <Searchbar onSearch={handleSearch} />
+                    <Searchbar 
+                        onSearch={onSearch}
+                        value={searchValue}
+                        placeholder="Rechercher par titre ou lieu..."
+                    />
                 </div>
             </div>
             <div className="flex items-center gap-4">
@@ -93,6 +98,8 @@ function CustomToolbar<TEvent extends { start: Date; end: Date }>({ label, onNav
             </div>
         </div>
     );
-}
+});
+
+CustomToolbar.displayName = 'CustomToolbar';
 
 export default CustomToolbar;
