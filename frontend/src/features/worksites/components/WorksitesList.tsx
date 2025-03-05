@@ -53,6 +53,22 @@ export default function WorksitesList({
         setSelectedWorksite(null);
     };
 
+    const handleDelete = async (worksite: Worksite) => {
+        try {
+            const response = await fetch(`http://localhost:3000/api/worksites/${worksite.id}`, {
+                method: 'DELETE',
+            });
+            if (response.ok) {
+                onDelete(worksite);
+            } else {
+                const error = await response.json();
+                console.error('Erreur lors de la suppression:', error);
+            }
+        } catch (error) {
+            console.error('Erreur lors de la suppression:', error);
+        }
+    };
+
     return (
         <>
             <div className="max-w-[80vw]">
@@ -139,7 +155,7 @@ export default function WorksitesList({
                                         variant="primary"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            onDelete(worksite);
+                                            handleDelete(worksite);
                                         }}
                                     >
                                         <Trash size={16} />

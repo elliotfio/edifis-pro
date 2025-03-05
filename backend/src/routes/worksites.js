@@ -69,21 +69,20 @@ router.post('/', async (req, res) => {
         }
 
         // Validation supplémentaire pour coordinates
-        if (!coordinates.x || !coordinates.y) {
+        if (!coordinates || typeof coordinates !== 'object' || !coordinates.x || !coordinates.y) {
             return res.status(400).json({
                 message: 'Coordonnées invalides',
                 required: 'Les coordonnées doivent avoir x et y'
             });
         }
 
-        // Gestion des spécialités (peut être une chaîne ou un tableau)
-        let specialitiesString = specialities_needed;
-        if (Array.isArray(specialities_needed)) {
-            specialitiesString = specialities_needed.join(', ');
-        }
-
         // Générer un ID unique si non fourni
         const worksite_id = id || Math.floor(Math.random() * 10000).toString();
+
+        // Gestion des spécialités (peut être une chaîne ou un tableau)
+        let specialitiesString = Array.isArray(specialities_needed) 
+            ? specialities_needed.join(', ')
+            : specialities_needed;
 
         const query = `
             INSERT INTO worksites (
@@ -114,7 +113,7 @@ router.post('/', async (req, res) => {
             specialitiesString
         ];
 
-        const [result] = await pool.query(query, values);
+        await pool.query(query, values);
         res.status(201).json({
             message: 'Chantier créé avec succès',
             worksite_id: worksite_id
@@ -153,7 +152,7 @@ router.put('/:id', async (req, res) => {
         }
 
         // Validation supplémentaire pour coordinates
-        if (!coordinates.x || !coordinates.y) {
+        if (!coordinates || typeof coordinates !== 'object' || !coordinates.x || !coordinates.y) {
             return res.status(400).json({
                 message: 'Coordonnées invalides',
                 required: 'Les coordonnées doivent avoir x et y'
@@ -168,10 +167,9 @@ router.put('/:id', async (req, res) => {
         }
 
         // Gestion des spécialités (peut être une chaîne ou un tableau)
-        let specialitiesString = specialities_needed;
-        if (Array.isArray(specialities_needed)) {
-            specialitiesString = specialities_needed.join(', ');
-        }
+        let specialitiesString = Array.isArray(specialities_needed)
+            ? specialities_needed.join(', ')
+            : specialities_needed;
 
         const query = `
             UPDATE worksites 
@@ -225,6 +223,26 @@ router.put('/:id', async (req, res) => {
 
     } catch (err) {
         console.error("❌ Erreur lors de la mise à jour du chantier:", err);
+        res.status(500).json({ message: 'Erreur serveur', error: err.message });
+    }
+});
+
+// Delete a worksite
+router.delete('/:id', async (req, res) => {
+    try {
+        // Vérifier si le chantier existe
+        const [existingWorksite] = await pool.query('SELECT * FROM worksites WHERE id = ?', [req.params.id]);
+        
+        if (existingWorksite.length === 0) {
+            return res.status(404).json({ message: 'Chantier non trouvé' });
+        }
+
+        // Supprimer le chantier
+        await pool.query('DELETE FROM worksites WHERE id = ?', [req.params.id]);
+        
+        res.json({ message: 'Chantier supprimé avec succès' });
+    } catch (err) {
+        console.error("❌ Erreur lors de la suppression du chantier:", err);
         res.status(500).json({ message: 'Erreur serveur', error: err.message });
     }
 });

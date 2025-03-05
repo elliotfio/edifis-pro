@@ -1,4 +1,14 @@
 {
+  "name": "edifis-pro-backend",
+  "version": "1.0.0",
+  "description": "Backend for Edifis Pro",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
   "dependencies": {
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
@@ -10,6 +20,8 @@
     "nodemon": "^3.1.9"
   },
   "devDependencies": {
-    "@types/axios": "^0.9.36"
+    "@types/axios": "^0.9.36",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
   }
 }

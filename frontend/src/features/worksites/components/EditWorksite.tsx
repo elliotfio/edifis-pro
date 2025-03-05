@@ -117,39 +117,63 @@ export default function EditWorksite({
     };
 
     const onSubmit = async (data: any) => {
+        // Vérifie si l'adresse est valide avant de soumettre
+        const addressValue = watch('address');
+        const coordinates = watch('coordinates');
+        if (addressValue && (coordinates.x === 0 && coordinates.y === 0)) {
+            setError('address', {
+                type: 'manual',
+                message: 'Veuillez sélectionner une adresse valide dans la liste'
+            });
+            return;
+        }
+
+        // Calculer le coût comme 80% du budget
+        const budget = parseFloat(data.budget);
+        const cost = budget * 0.8;
+
+        // Préparer les données pour l'API
+        const worksiteData = {
+            name: data.name.trim(),
+            address: data.address,
+            coordinates: data.coordinates,
+            startDate: formatDate(data.startDate),
+            endDate: formatDate(data.endDate),
+            status: data.status,
+            budget: budget.toString(),
+            cost: cost.toString(),
+            specialities_needed: Array.isArray(data.specialities_needed) 
+                ? data.specialities_needed 
+                : [data.specialities_needed]
+        };
+
         try {
             const response = await fetch(`http://localhost:3000/api/worksites/${worksite.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    name: data.name,
-                    address: data.address,
-                    coordinates: data.coordinates,
-                    startDate: formatDate(data.startDate),
-                    endDate: formatDate(data.endDate),
-                    status: data.status,
-                    budget: data.budget.toString(),
-                    cost: data.cost.toString(),
-                    specialities_needed: ensureArray(data.specialities_needed)
-                })
+                body: JSON.stringify(worksiteData)
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Erreur lors de la modification du chantier');
+                throw new Error(errorData.message || 'Erreur lors de la mise à jour du chantier');
             }
 
             const result = await response.json();
-            onEditWorksite(result.worksite);
+            onEditWorksite({
+                ...data,
+                id: worksite.id,
+                cost: cost
+            });
+            reset();
             onClose();
-
         } catch (error: any) {
-            console.error('Erreur lors de la modification du chantier:', error);
+            console.error('Erreur lors de la mise à jour du chantier:', error);
             setError('root', {
                 type: 'manual',
-                message: error.message || 'Erreur lors de la modification du chantier'
+                message: error.message || 'Erreur lors de la mise à jour du chantier'
             });
         }
     };
