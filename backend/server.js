@@ -29,9 +29,11 @@ const pool = mysql.createPool({
 
 
 const authRoutes = require('./src/routes/auth'); 
+const adminRoutes = require('./src/routes/adminRoutes');
 
 
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 
 app.get('/', (req, res) => {
