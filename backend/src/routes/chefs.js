@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/db');
+const db = require('../config/db');
 
 // GET all chefs
 router.get('/', async (req, res) => {
     try {
-        const [chefs] = await pool.query(`
+        const [chefs] = await db.query(`
             SELECT c.*, u.firstName, u.lastName, u.email, u.role, u.date_creation
             FROM chef c
             INNER JOIN users u ON c.user_id = u.id
