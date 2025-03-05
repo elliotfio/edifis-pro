@@ -7,11 +7,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { HardHat, Mail, User, UserCog } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { userSchema, UserFormData } from '@/validators/userValidator';
+import axios from 'axios';
 
 interface AddUserProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (data: UserFormData) => void;
 }
 
 const specialityOptions = WORKSITE_SPECIALITIES.map((speciality) => ({
@@ -26,7 +26,17 @@ const roleOptions = [
     { label: 'Administrateur', value: 'admin' },
 ];
 
-export default function AddUser({ isOpen, onClose, onAdd }: AddUserProps) {
+const addUser = async (userData: UserFormData) => {
+    try {
+        const response = await axios.post('/api/users', userData);
+        return response.data;
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout de l\'utilisateur:', error);
+        throw error;
+    }
+};
+
+export default function AddUser({ isOpen, onClose }: AddUserProps) {
     const {
         register,
         handleSubmit,
@@ -69,7 +79,8 @@ export default function AddUser({ isOpen, onClose, onAdd }: AddUserProps) {
 
     const onSubmit = async (data: UserFormData) => {
         try {
-            await onAdd(data);
+            const newUser = await addUser(data);
+            console.log('Utilisateur ajouté:', newUser);
             reset();
             onClose();
         } catch (error) {
@@ -79,7 +90,7 @@ export default function AddUser({ isOpen, onClose, onAdd }: AddUserProps) {
                     message: error.message
                 });
             }
-            console.error('Error adding user:', error);
+            console.error('Erreur lors de l\'ajout de l\'utilisateur:', error);
         }
     };
 
