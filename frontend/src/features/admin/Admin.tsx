@@ -1,8 +1,7 @@
 import { Button } from '@/components/ui/Button';
 import Searchbar from '@/components/ui/Searchbar';
-import mockData from '@/mocks/userMock.json';
 import { Plus, ShieldBan } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import UsersList from './components/UsersList';
 import AddUser from './components/AddUser';
 import EditUser from './components/EditUser';
@@ -27,26 +26,49 @@ export default function Admin() {
     const [sortColumn, setSortColumn] = useState<string>('nom');
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
     const [searchQuery, setSearchQuery] = useState('');
-    const [users, setUsers] = useState(
-        mockData.users.map((user) => ({
-            user: {
-                id: user.id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                role: user.role,
-                date_creation: user.date_creation,
-            },
-            user_id: user.id,
-            specialites:
-                user.role === 'artisan'
-                    ? mockData.artisans.find((a) => a.user_id === user.id)?.specialites || []
-                    : mockData.chefs.find((c) => c.user_id === user.id)?.specialites || [],
-        }))
-    );
+    const [users, setUsers] = useState<UserWithRole[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [deleteModalUser, setDeleteModalUser] = useState<UserWithRole | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                const response = await fetch('http://localhost:3000/api/auth/users');
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la récupération des utilisateurs');
+                }
+                const data = await response.json();
+                
+                // Transformation des données pour correspondre à la structure UserWithRole
+                const formattedUsers: UserWithRole[] = data.map((user: any) => ({
+                    user: {
+                        id: user.id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        email: user.email,
+                        role: user.role,
+                        date_creation: user.date_creation || new Date().toISOString()
+                    },
+                    user_id: user.id,
+                    specialites: [] // À implémenter quand les spécialités seront disponibles
+                }));
+
+                setUsers(formattedUsers);
+            } catch (error) {
+                console.error('Erreur:', error);
+                setError(error instanceof Error ? error.message : 'Une erreur est survenue');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchUsers();
+    }, []);
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
@@ -184,14 +206,24 @@ export default function Admin() {
                 </Button>
             </div>
 
-            <UsersList
-                data={filteredData}
-                sortColumn={sortColumn}
-                sortDirection={sortDirection}
-                onSort={handleSort}
-                onDelete={handleDeleteClick}
-                onEdit={handleEditClick}
-            />
+            {error ? (
+                <div className="text-red-500 p-4 rounded-lg bg-red-50">
+                    {error}
+                </div>
+            ) : isLoading ? (
+                <div className="flex items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+            ) : (
+                <UsersList
+                    data={filteredData}
+                    sortColumn={sortColumn}
+                    sortDirection={sortDirection}
+                    onSort={handleSort}
+                    onDelete={handleDeleteClick}
+                    onEdit={handleEditClick}
+                />
+            )}
 
             <AddUser 
                 isOpen={isAddModalOpen}
