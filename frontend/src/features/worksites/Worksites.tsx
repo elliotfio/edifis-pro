@@ -143,8 +143,8 @@ export default function Worksites() {
                             className="flex gap-2 items-center"
                             transition={{ duration: 0.2, delay: view === 'list' ? 0.1 : 0 }}
                         >
-                            <List size={22} strokeWidth={1.7} />
-                            <span className="font-medium">Liste</span>
+                            <List size={20} strokeWidth={1.7} />
+                            <span className="text-sm font-medium">Liste</span>
                         </motion.div>
                     </button>
                     <button
@@ -156,8 +156,8 @@ export default function Worksites() {
                             className="flex gap-2 items-center"
                             transition={{ duration: 0.2, delay: view === 'kanban' ? 0.1 : 0 }}
                         >
-                            <LayoutGrid size={22} strokeWidth={1.7} />
-                            <span className="font-medium">Kanban</span>
+                            <LayoutGrid size={20} strokeWidth={1.7} />
+                            <span className="text-sm font-medium">Kanban</span>
                         </motion.div>
                     </button>
                     <button
@@ -169,8 +169,8 @@ export default function Worksites() {
                             className="flex gap-2 items-center"
                             transition={{ duration: 0.2, delay: view === 'map' ? 0.1 : 0 }}
                         >
-                            <MapPin size={22} strokeWidth={1.7} />
-                            <span className="font-medium">Carte</span>
+                            <MapPin size={20} strokeWidth={1.7} />
+                            <span className="text-sm font-medium">Carte</span>
                         </motion.div>
                     </button>
                 </div>

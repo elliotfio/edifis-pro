@@ -4,6 +4,9 @@ import mockData from '@/mocks/userMock.json';
 import { Plus, ShieldBan } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import UsersList from './components/UsersList';
+import AddUser from './components/AddUser';
+import EditUser from './components/EditUser';
+import { UserFormData } from '@/validators/userValidator';
 
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -42,6 +45,8 @@ export default function Admin() {
         }))
     );
     const [deleteModalUser, setDeleteModalUser] = useState<UserWithRole | null>(null);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
@@ -64,6 +69,10 @@ export default function Admin() {
         setDeleteModalUser(user);
     };
 
+    const handleEditClick = (user: UserWithRole) => {
+        setEditingUser(user);
+    };
+
     const handleDeleteConfirm = () => {
         if (deleteModalUser) {
             setUsers((currentUsers) =>
@@ -71,6 +80,47 @@ export default function Admin() {
             );
             setDeleteModalUser(null);
         }
+    };
+
+    const handleAddUser = async (data: UserFormData) => {
+        const newUser: UserWithRole = {
+            user: {
+                id: users.length + 1, // Pour le mock, en production ce serait géré par le backend
+                firstName: data.firstName,
+                lastName: data.lastName,
+                email: data.email,
+                role: data.role,
+                date_creation: new Date().toISOString(),
+            },
+            user_id: users.length + 1,
+            specialites: data.specialites || [],
+        };
+
+        setUsers((currentUsers) => [...currentUsers, newUser]);
+    };
+
+    const handleEditUser = async (data: UserFormData) => {
+        if (!editingUser) return;
+
+        setUsers((currentUsers) =>
+            currentUsers.map((user) => {
+                if (user.user_id === editingUser.user_id) {
+                    return {
+                        user: {
+                            ...user.user,
+                            firstName: data.firstName,
+                            lastName: data.lastName,
+                            email: data.email,
+                            role: data.role,
+                        },
+                        user_id: user.user_id,
+                        specialites: data.specialites || [],
+                    };
+                }
+                return user;
+            })
+        );
+        setEditingUser(null);
     };
 
     const filteredData = useMemo(() => {
@@ -128,7 +178,7 @@ export default function Admin() {
             </div>
             <div className="flex items-center gap-4 mb-6 w-1/2">
                 <Searchbar onSearch={handleSearch} className="flex-1" />
-                <Button className="shrink-0">
+                <Button className="shrink-0" onClick={() => setIsAddModalOpen(true)}>
                     <Plus size={20} className="mr-2" />
                     Ajouter un utilisateur
                 </Button>
@@ -140,14 +190,37 @@ export default function Admin() {
                 sortDirection={sortDirection}
                 onSort={handleSort}
                 onDelete={handleDeleteClick}
+                onEdit={handleEditClick}
             />
+
+            <AddUser 
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onAdd={handleAddUser}
+            />
+
+            {editingUser && (
+                <EditUser
+                    isOpen={true}
+                    onClose={() => setEditingUser(null)}
+                    onEdit={handleEditUser}
+                    initialData={{
+                        firstName: editingUser.user.firstName,
+                        lastName: editingUser.user.lastName,
+                        email: editingUser.user.email,
+                        role: editingUser.user.role as UserFormData['role'],
+                        specialites: editingUser.specialites,
+                        years_experience: undefined, // You might want to add this to your UserWithRole type if needed
+                    }}
+                />
+            )}
 
             {deleteModalUser && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-[400px]">
-                        <h3 className="text-lg font-semibold mb-2">Supprimer le chantier</h3>
+                        <h3 className="text-lg font-semibold mb-2">Supprimer l'utilisateur</h3>
                         <p className="text-gray-600 mb-6">
-                            Êtes-vous sûr de vouloir supprimer le chantier "
+                            Êtes-vous sûr de vouloir supprimer l'utilisateur "
                             {deleteModalUser.user.firstName} {deleteModalUser.user.lastName}" ? Cette action est irréversible.
                         </p>
                         <div className="flex justify-end gap-3">

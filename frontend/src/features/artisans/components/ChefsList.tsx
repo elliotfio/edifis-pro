@@ -18,6 +18,7 @@ interface ChefsListProps {
     sortDirection: 'asc' | 'desc' | null;
     onSort: (column: string) => void;
     onDelete: (chef: ChefUser) => void;
+    onEdit: (chef: ChefUser) => void;
 }
 
 const truncateText = (text: string, maxLength: number = 32) => {
@@ -31,6 +32,7 @@ export default function ChefsList({
     sortDirection,
     onSort,
     onDelete,
+    onEdit,
 }: ChefsListProps) {
     const navigate = useNavigate();
 
@@ -123,6 +125,7 @@ export default function ChefsList({
                                     variant="primary"
                                     onClick={(e) => {
                                         e.stopPropagation();
+                                        onEdit(chef);
                                     }}
                                 >
                                     <Pencil size={16} />

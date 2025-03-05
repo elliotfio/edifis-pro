@@ -18,6 +18,7 @@ interface ArtisansListProps {
     sortDirection: 'asc' | 'desc' | null;
     onSort: (column: string) => void;
     onDelete: (artisan: ArtisanUser) => void;
+    onEdit: (artisan: ArtisanUser) => void;
 }
 
 const truncateText = (text: string, maxLength: number = 32) => {
@@ -31,6 +32,7 @@ export default function ArtisansList({
     sortDirection,
     onSort,
     onDelete,
+    onEdit,
 }: ArtisansListProps) {
     const navigate = useNavigate();
 
@@ -124,6 +126,7 @@ export default function ArtisansList({
                                     variant="primary"
                                     onClick={(e) => {
                                         e.stopPropagation();
+                                        onEdit(artisan);
                                     }}
                                 >
                                     <Pencil size={16} />

@@ -116,7 +116,12 @@ export default function AddWorksite({ isOpen, onClose, onAddWorksite }: AddWorks
                 <h2 className="text-lg font-medium mb-4">Ajouter un nouveau chantier</h2>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit(onSubmit)();
+                    }
+                }}>
                     <Input
                         label="Nom du projet"
                         rightIcon={<Text size={20} className='text-gray-400' />}

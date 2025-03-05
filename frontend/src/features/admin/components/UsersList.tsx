@@ -31,6 +31,7 @@ interface UsersListProps {
     sortDirection: 'asc' | 'desc' | null;
     onSort: (column: string) => void;
     onDelete: (user: UserWithRole) => void;
+    onEdit: (user: UserWithRole) => void;
 }
 
 export default function UsersList({
@@ -39,6 +40,7 @@ export default function UsersList({
     sortDirection,
     onSort,
     onDelete,
+    onEdit,
 }: UsersListProps) {
     const navigate = useNavigate();
     return (
@@ -104,6 +106,7 @@ export default function UsersList({
                                 variant="primary"
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    onEdit(item);
                                 }}
                             >
                                 <Pencil size={16} />

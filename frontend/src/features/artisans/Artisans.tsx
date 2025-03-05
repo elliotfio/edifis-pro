@@ -1,13 +1,14 @@
 import { Button } from '@/components/ui/Button';
 import Searchbar from '@/components/ui/Searchbar';
 import mockData from '@/mocks/userMock.json';
-import { ArtisanUser, ChefUser, ArtisanFormData } from '@/types/userType';
+import { ArtisanFormData, ArtisanUser, ChefUser } from '@/types/userType';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HardHat, Pickaxe, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import AddArtisan from './components/AddArtisan';
 import ArtisansList from './components/ArtisansList';
 import ChefsList from './components/ChefsList';
-import AddArtisan from './components/AddArtisan';
+import EditArtisan from './components/EditArtisan';
 
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -42,6 +43,7 @@ export default function Artisans() {
     );
     const [deleteModalUser, setDeleteModalUser] = useState<UserWithRole | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<ArtisanUser | ChefUser | null>(null);
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
@@ -62,9 +64,9 @@ export default function Artisans() {
 
     const handleAdd = async (data: ArtisanFormData) => {
         // Vérifier si l'email existe déjà
-        const emailExists = mockData.users.some(user => user.email === data.email);
+        const emailExists = mockData.users.some((user) => user.email === data.email);
         if (emailExists) {
-            throw new Error("Cette adresse email est déjà utilisée");
+            throw new Error('Cette adresse email est déjà utilisée');
         }
 
         const baseUser = {
@@ -73,7 +75,7 @@ export default function Artisans() {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email,
-                password: "password", 
+                password: 'password',
                 role: view === 'artisans' ? 'artisan' : 'chef',
                 date_creation: new Date().toISOString().split('T')[0],
             },
@@ -84,28 +86,82 @@ export default function Artisans() {
             history_worksite: [],
         };
 
-        const newUser = view === 'artisans' 
-            ? {
-                ...baseUser,
-                note_moyenne: 0,
-                nombre_chantiers: 0
-              }
-            : {
-                ...baseUser,
-                note_moyenne: 0,
-                years_experience: data.years_experience || 0,
-                chantiers_en_cours: 0,
-                chantiers_termines: 0
-              };
+        const newUser =
+            view === 'artisans'
+                ? {
+                      ...baseUser,
+                      note_moyenne: 0,
+                      nombre_chantiers: 0,
+                  }
+                : {
+                      ...baseUser,
+                      note_moyenne: 0,
+                      years_experience: data.years_experience || 0,
+                      chantiers_en_cours: 0,
+                      chantiers_termines: 0,
+                  };
 
-              console.log(newUser);
-        
+        console.log(newUser);
+
         if (view === 'artisans') {
-            setArtisans(prev => [...prev, newUser as any]);
+            setArtisans((prev) => [...prev, newUser as any]);
         } else {
-            setChefs(prev => [...prev, newUser as any]);
+            setChefs((prev) => [...prev, newUser as any]);
         }
         setIsAddModalOpen(false);
+    };
+
+    const handleEdit = async (formData: ArtisanFormData) => {
+        if (!editingUser) return;
+
+        // Vérifier si l'email existe déjà (sauf pour l'utilisateur en cours d'édition)
+        const emailExists = mockData.users.some(
+            (user) => user.email === formData.email && user.id !== editingUser.user.id
+        );
+        if (emailExists) {
+            throw new Error('Cette adresse email est déjà utilisée');
+        }
+
+        const updatedUser = {
+            user: {
+                ...editingUser.user,
+                firstName: formData.firstName,
+                lastName: formData.lastName,
+                email: formData.email,
+            },
+            user_id: editingUser.user_id,
+            specialites: formData.specialites,
+            disponible: editingUser.disponible,
+            note_moyenne: editingUser.note_moyenne,
+            nombre_chantiers: (editingUser.history_worksite?.length || 0) + (editingUser.current_worksite ? 1 : 0),
+            current_worksite: editingUser.current_worksite,
+            history_worksite: editingUser.history_worksite,
+            ...(view === 'chefs' && {
+                years_experience: (editingUser as ChefUser).years_experience,
+                chantiers_en_cours: (editingUser as ChefUser).chantiers_en_cours,
+                chantiers_termines: (editingUser as ChefUser).chantiers_termines
+            })
+        };
+
+        if (view === 'artisans') {
+            setArtisans((prev) =>
+                prev.map((artisan) =>
+                    artisan.user_id === editingUser.user_id
+                        ? { ...artisan, ...updatedUser as any }
+                        : artisan
+                )
+            );
+        } else {
+            setChefs((prev) =>
+                prev.map((chef) =>
+                    chef.user_id === editingUser.user_id
+                        ? { ...chef, ...updatedUser } as any 
+                        : chef
+                )
+            );
+        }
+
+        setEditingUser(null);
     };
 
     const handleDeleteClick = (user: UserWithRole) => {
@@ -154,10 +210,7 @@ export default function Artisans() {
             <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="flex gap-4 w-1/2">
                     <Searchbar onSearch={handleSearch} className="flex-1" />
-                    <Button
-                        variant="primary"
-                        onClick={() => setIsAddModalOpen(true)}
-                    >
+                    <Button variant="primary" onClick={() => setIsAddModalOpen(true)}>
                         <Plus className="mr-2" size={16} />
                         Ajouter {view === 'artisans' ? 'un artisan' : 'un chef'}
                     </Button>
@@ -185,8 +238,8 @@ export default function Artisans() {
                             className="flex gap-2 items-center"
                             transition={{ duration: 0.2, delay: view === 'artisans' ? 0.1 : 0 }}
                         >
-                            <Pickaxe size={22} strokeWidth={1.7} />
-                            <span className="font-medium">Artisans</span>
+                            <Pickaxe size={20} strokeWidth={1.7} />
+                            <span className="text-sm font-medium">Artisans</span>
                         </motion.div>
                     </button>
                     <button
@@ -198,8 +251,8 @@ export default function Artisans() {
                             className="flex gap-2 items-center"
                             transition={{ duration: 0.2, delay: view === 'chefs' ? 0.1 : 0 }}
                         >
-                            <HardHat size={22} strokeWidth={1.7} />
-                            <span className="font-medium">Chefs</span>
+                            <HardHat size={20} strokeWidth={1.7} />
+                            <span className="font-medium text-sm">Chefs</span>
                         </motion.div>
                     </button>
                 </div>
@@ -212,6 +265,7 @@ export default function Artisans() {
                     sortDirection={sortDirection}
                     onSort={handleSort}
                     onDelete={handleDeleteClick}
+                    onEdit={setEditingUser}
                 />
             ) : (
                 <ChefsList
@@ -220,6 +274,7 @@ export default function Artisans() {
                     sortDirection={sortDirection}
                     onSort={handleSort}
                     onDelete={handleDeleteClick}
+                    onEdit={setEditingUser}
                 />
             )}
 
@@ -259,6 +314,16 @@ export default function Artisans() {
                     isOpen={isAddModalOpen}
                     onClose={() => setIsAddModalOpen(false)}
                     onAdd={handleAdd}
+                    view={view}
+                />
+            )}
+
+            {editingUser && (
+                <EditArtisan
+                    isOpen={!!editingUser}
+                    onClose={() => setEditingUser(null)}
+                    onEdit={handleEdit}
+                    artisan={editingUser}
                     view={view}
                 />
             )}

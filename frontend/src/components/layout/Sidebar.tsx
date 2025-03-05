@@ -68,6 +68,9 @@ export default function Sidebar() {
         if (href === '/worksites' && location.pathname.startsWith('/worksite/')) {
             return true;
         }
+        if (href === '/artisans' && location.pathname.startsWith('/user/')) {
+            return true;
+        }
         return location.pathname === href;
     };
 

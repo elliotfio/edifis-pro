@@ -2,16 +2,17 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { SelectInput } from '@/components/ui/SelectInput';
 import { WORKSITE_SPECIALITIES, WorksiteSpeciality } from '@/types/worksiteType';
+import { UserRole } from '@/types/userType';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { HardHat, Mail, User } from 'lucide-react';
+import { HardHat, Mail, User, UserCog } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { ArtisanFormData, artisanSchema } from '@/validators/artisanValidator';
+import { userSchema, UserFormData } from '@/validators/userValidator';
 
-interface AddArtisanProps {
+interface EditUserProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (data: ArtisanFormData) => void;
-    view: 'artisans' | 'chefs';
+    onEdit: (data: UserFormData) => void;
+    initialData: UserFormData;
 }
 
 const specialityOptions = WORKSITE_SPECIALITIES.map((speciality) => ({
@@ -19,29 +20,27 @@ const specialityOptions = WORKSITE_SPECIALITIES.map((speciality) => ({
     value: speciality,
 }));
 
-// Schema for form validation
+const roleOptions = [
+    { label: 'Employé administratif', value: 'employe' },
+    { label: 'Artisan', value: 'artisan' },
+    { label: 'Chef de chantier', value: 'chef' },
+    { label: 'Administrateur', value: 'admin' },
+];
 
-
-export default function AddArtisan({ isOpen, onClose, onAdd, view }: AddArtisanProps) {
+export default function EditUser({ isOpen, onClose, onEdit, initialData }: EditUserProps) {
     const {
         register,
         handleSubmit,
         formState: { errors },
-        reset,
         setValue,
         watch,
         setError,
-    } = useForm<ArtisanFormData>({
-        resolver: zodResolver(artisanSchema),
-        defaultValues: {
-            firstName: '',
-            lastName: '',
-            email: '',
-            specialites: [],
-            years_experience: undefined,
-        },
+    } = useForm<UserFormData>({
+        resolver: zodResolver(userSchema),
+        defaultValues: initialData,
     });
 
+    const selectedRole = watch('role');
     const selectedSpecialities = watch('specialites');
 
     const handleSpecialitySelect = (speciality: string) => {
@@ -61,10 +60,9 @@ export default function AddArtisan({ isOpen, onClose, onAdd, view }: AddArtisanP
         }
     };
 
-    const onSubmit = async (data: ArtisanFormData) => {
+    const onSubmit = async (data: UserFormData) => {
         try {
-            await onAdd(data);
-            reset();
+            await onEdit(data);
             onClose();
         } catch (error) {
             if (error instanceof Error) {
@@ -73,23 +71,21 @@ export default function AddArtisan({ isOpen, onClose, onAdd, view }: AddArtisanP
                     message: error.message
                 });
             }
-            console.error('Error adding artisan:', error);
+            console.error('Error editing user:', error);
         }
     };
 
     if (!isOpen) return null;
 
+    const showSpecialFields = selectedRole === 'artisan' || selectedRole === 'chef';
+
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
             <div className="bg-white rounded-lg p-6 w-[500px]" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-2 mb-6">
-                    {view === 'artisans' ? (
-                        <User className="text-primary" size={24} />
-                    ) : (
-                        <HardHat className="text-primary" size={24} />
-                    )}
+                    <UserCog size={24} />
                     <h2 className="text-xl font-semibold">
-                        Ajouter un {view === 'artisans' ? 'artisan' : 'chef de chantier'}
+                        Modifier l'utilisateur
                     </h2>
                 </div>
 
@@ -104,6 +100,7 @@ export default function AddArtisan({ isOpen, onClose, onAdd, view }: AddArtisanP
                             <div>
                                 <Input
                                     label="Prénom"
+                                    placeholder='John'
                                     error={errors.firstName?.message}
                                     rightIcon={<User size={20} />}
                                     {...register('firstName')}
@@ -112,6 +109,7 @@ export default function AddArtisan({ isOpen, onClose, onAdd, view }: AddArtisanP
                             <div>
                                 <Input
                                     label="Nom"
+                                    placeholder='Doe'
                                     error={errors.lastName?.message}
                                     rightIcon={<User size={20} />}
                                     {...register('lastName')}
@@ -121,37 +119,52 @@ export default function AddArtisan({ isOpen, onClose, onAdd, view }: AddArtisanP
 
                         <Input
                             label="Email"
+                            placeholder='john.doe@edifis.fr'
                             error={errors.email?.message}
                             rightIcon={<Mail size={20} />}
                             {...register('email')}
                         />
 
-                        {view === 'chefs' && (
-                            <Input
-                                type="number"
-                                label="Années d'expérience"
-                                error={errors.years_experience?.message}
-                                rightIcon={<HardHat size={20} />}
-                                {...register('years_experience', { valueAsNumber: true })}
-                            />
-                        )}
-
                         <SelectInput
-                            label="Spécialités"
-                            name="specialites"
-                            options={specialityOptions}
-                            value={selectedSpecialities || []}
-                            onChange={handleSpecialitySelect}
-                            error={errors.specialites?.message}
-                            isMulti
+                            label="Rôle"
+                            name="role"
+                            options={roleOptions}
+                            value={selectedRole ? [selectedRole] : []}
+                            onChange={(value) => setValue('role', value as UserRole, { shouldValidate: true })}
+                            error={errors.role?.message}
+                            isMulti={false}
                         />
+
+                        {showSpecialFields && (
+                            <>
+                                {selectedRole === 'chef' && (
+                                    <Input
+                                        type="number"
+                                        label="Années d'expérience"
+                                        error={errors.years_experience?.message}
+                                        rightIcon={<HardHat size={20} />}
+                                        {...register('years_experience', { valueAsNumber: true })}
+                                    />
+                                )}
+
+                                <SelectInput
+                                    label="Spécialités"
+                                    name="specialites"
+                                    options={specialityOptions}
+                                    value={selectedSpecialities || []}
+                                    onChange={handleSpecialitySelect}
+                                    error={errors.specialites?.message}
+                                    isMulti
+                                />
+                            </>
+                        )}
 
                         <div className="flex justify-end gap-3 mt-6">
                             <Button variant="secondary" onClick={onClose}>
                                 Annuler
                             </Button>
                             <Button type="submit">
-                                Ajouter
+                                Enregistrer
                             </Button>
                         </div>
                     </div>
