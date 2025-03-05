@@ -62,9 +62,6 @@ export const worksiteEditSchema = z.object({
     }
 );
 
-export type WorksiteFormData = z.infer<typeof worksiteSchema>;
-export type WorksiteEditFormData = z.infer<typeof worksiteEditSchema>;
-
 export function createWorksiteFromFormData(formData: WorksiteFormData): {
     id: string;
     status: WorksiteStatus;
@@ -81,3 +78,6 @@ export function createWorksiteFromFormData(formData: WorksiteFormData): {
         ...formData,
     };
 }
+
+export type WorksiteFormData = z.infer<typeof worksiteSchema>;
+export type WorksiteEditFormData = z.infer<typeof worksiteEditSchema>;

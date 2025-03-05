@@ -10,6 +10,14 @@ export interface User {
     password?: string;
 }
 
+export interface ArtisanFormData {
+    firstName: string;
+    lastName: string;
+    email: string;
+    specialites: string[];
+    years_experience?: number;
+}
+
 export interface ArtisanUser {
     user_id: number;
     user: User;
@@ -31,4 +39,5 @@ export interface ChefUser {
     chantiers_termines: number;
     current_worksite?: string;
     history_worksite?: string[];
+    note_moyenne?: number;
 }

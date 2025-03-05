@@ -1,8 +1,8 @@
-import { Calendar } from 'lucide-react';
-import { useState, useMemo } from 'react';
-import { Calendar as BigCalendar, momentLocalizer, View, ToolbarProps } from 'react-big-calendar';
-import moment from 'moment';
 import CustomToolbar from '@/components/ui/CustomToolbar';
+import { Calendar } from 'lucide-react';
+import moment from 'moment';
+import { useMemo, useState } from 'react';
+import { Calendar as BigCalendar, momentLocalizer, View } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 moment.locale('fr');
@@ -135,16 +135,6 @@ const sampleConstructionEvents: ConstructionEvent[] = [
     }
 ];
 
-interface SearchBarProps {
-    value: string;
-    onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-interface CustomToolbarProps<TEvent extends object> extends ToolbarProps<TEvent> {
-    onSearch: (query: string) => void;
-    searchValue: string;
-}
-
 export default function Planification() {
     const [view, setView] = useState<View>('month');
     const [searchQuery, setSearchQuery] = useState('');
@@ -154,17 +144,15 @@ export default function Planification() {
     };
 
     const handleSearch = (query: string) => {
-        console.log('Search query:', query);
         setSearchQuery(query);
     };
 
     const filteredEvents = useMemo(() => {
-        if (!searchQuery) return sampleConstructionEvents;
+        const searchLower = searchQuery.toLowerCase().trim();
+        if (!searchLower) return sampleConstructionEvents;
 
-        const searchLower = searchQuery.toLowerCase();
         return sampleConstructionEvents.filter((event) =>
             event.title.toLowerCase().includes(searchLower) ||
-            event.description.toLowerCase().includes(searchLower) ||
             event.location.toLowerCase().includes(searchLower)
         );
     }, [searchQuery]);

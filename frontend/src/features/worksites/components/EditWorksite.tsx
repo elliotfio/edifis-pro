@@ -6,7 +6,7 @@ import { SelectInput } from '@/components/ui/SelectInput';
 import { Worksite, WORKSITE_SPECIALITIES, WorksiteSpeciality } from '@/types/worksiteType';
 import { WorksiteEditFormData, worksiteEditSchema } from '@/validators/worksiteValidator';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CreditCard, Text } from 'lucide-react';
+import { CreditCard, Pickaxe, Text } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -23,7 +23,6 @@ const specialityOptions = WORKSITE_SPECIALITIES.map((speciality) => ({
 }));
 
 export default function EditWorksite({
-    isOpen,
     onClose,
     onEditWorksite,
     worksite,
@@ -115,13 +114,25 @@ export default function EditWorksite({
     };
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title="Modifier le chantier"
+        <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={onClose}
         >
-            <div className="p-6">
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="bg-white rounded-lg p-6 w-[500px]" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-2 mb-6">
+                    <Pickaxe size={24} />
+                    <h2 className="text-xl font-semibold">Modifier le chantier</h2>
+                </div>
+                <form
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="space-y-4"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSubmit(onSubmit)();
+                        }
+                    }}
+                >
                     <Input
                         label="Nom du projet"
                         rightIcon={<Text size={20} className="text-gray-400" />}
@@ -178,6 +189,6 @@ export default function EditWorksite({
                     </div>
                 </form>
             </div>
-        </Modal>
+        </div>
     );
 }

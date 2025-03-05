@@ -12,23 +12,36 @@ import { formatDateToDDMMYYYY } from '@/services/formattedDateService';
 import { Eye, Pencil, Trash } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface User {
-    id: number;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-    date_creation: string;
-}
+type UserWithRole = {
+    user: {
+        id: number;
+        firstName: string;
+        lastName: string;
+        email: string;
+        role: string;
+        date_creation: string;
+    };
+    user_id: number;
+    specialites: string[];
+};
 
 interface UsersListProps {
-    data: User[];
+    data: UserWithRole[];
     sortColumn: string;
     sortDirection: 'asc' | 'desc' | null;
     onSort: (column: string) => void;
+    onDelete: (user: UserWithRole) => void;
+    onEdit: (user: UserWithRole) => void;
 }
 
-export default function UsersList({ data, sortColumn, sortDirection, onSort }: UsersListProps) {
+export default function UsersList({
+    data,
+    sortColumn,
+    sortDirection,
+    onSort,
+    onDelete,
+    onEdit,
+}: UsersListProps) {
     const navigate = useNavigate();
     return (
         <Table>
@@ -63,20 +76,20 @@ export default function UsersList({ data, sortColumn, sortDirection, onSort }: U
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {data.map((user) => (
-                    <TableRow key={user.id}>
+                {data.map((item) => (
+                    <TableRow key={item.user.id}>
                         <TableCell>
-                            {user.firstName} {user.lastName}
+                            {item.user.firstName} {item.user.lastName}
                         </TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{formatDateToDDMMYYYY(user.date_creation)}</TableCell>
+                        <TableCell>{item.user.email}</TableCell>
+                        <TableCell>{formatDateToDDMMYYYY(item.user.date_creation)}</TableCell>
                         <TableCell>
                             <span
                                 className={`px-4 py-1 rounded-full text-sm ${getRoleColor(
-                                    user.role
+                                    item.user.role
                                 )}`}
                             >
-                                {formatRole(user.role)}
+                                {formatRole(item.user.role)}
                             </span>
                         </TableCell>
                         <TableCell className="flex items-center gap-2">
@@ -84,7 +97,7 @@ export default function UsersList({ data, sortColumn, sortDirection, onSort }: U
                                 variant="primary"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    navigate(`/user/${user.id}`);
+                                    navigate(`/user/${item.user.id}`);
                                 }}
                             >
                                 <Eye size={16} />
@@ -93,6 +106,7 @@ export default function UsersList({ data, sortColumn, sortDirection, onSort }: U
                                 variant="primary"
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    onEdit(item);
                                 }}
                             >
                                 <Pencil size={16} />
@@ -101,6 +115,7 @@ export default function UsersList({ data, sortColumn, sortDirection, onSort }: U
                                 variant="primary"
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    onDelete(item);
                                 }}
                             >
                                 <Trash size={16} />
