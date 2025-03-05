@@ -187,7 +187,7 @@ export function AddressInput({ label, error, value, onChange, disabled }: Addres
                     ))}
                 </div>
             )}
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 mt-3">
                 <MapPin size={20} className="text-gray-400" />
             </div>
         </div>
