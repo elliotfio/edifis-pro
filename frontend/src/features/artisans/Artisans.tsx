@@ -1,12 +1,13 @@
 import { Button } from '@/components/ui/Button';
 import Searchbar from '@/components/ui/Searchbar';
 import mockData from '@/mocks/userMock.json';
-import { ArtisanUser, ChefUser } from '@/types/userType';
+import { ArtisanUser, ChefUser, ArtisanFormData } from '@/types/userType';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HardHat, Pickaxe, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import ArtisansList from './components/ArtisansList';
 import ChefsList from './components/ChefsList';
+import AddArtisan from './components/AddArtisan';
 
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -40,6 +41,7 @@ export default function Artisans() {
         }))
     );
     const [deleteModalUser, setDeleteModalUser] = useState<UserWithRole | null>(null);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
@@ -56,6 +58,54 @@ export default function Artisans() {
             setSortColumn(column);
             setSortDirection('asc');
         }
+    };
+
+    const handleAdd = async (data: ArtisanFormData) => {
+        // Vérifier si l'email existe déjà
+        const emailExists = mockData.users.some(user => user.email === data.email);
+        if (emailExists) {
+            throw new Error("Cette adresse email est déjà utilisée");
+        }
+
+        const baseUser = {
+            user: {
+                id: mockData.users.length + 1,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                email: data.email,
+                password: "password", 
+                role: view === 'artisans' ? 'artisan' : 'chef',
+                date_creation: new Date().toISOString().split('T')[0],
+            },
+            user_id: mockData.users.length + 1,
+            disponible: true,
+            specialites: data.specialites || [],
+            current_worksite: '',
+            history_worksite: [],
+        };
+
+        const newUser = view === 'artisans' 
+            ? {
+                ...baseUser,
+                note_moyenne: 0,
+                nombre_chantiers: 0
+              }
+            : {
+                ...baseUser,
+                note_moyenne: 0,
+                years_experience: data.years_experience || 0,
+                chantiers_en_cours: 0,
+                chantiers_termines: 0
+              };
+
+              console.log(newUser);
+        
+        if (view === 'artisans') {
+            setArtisans(prev => [...prev, newUser as any]);
+        } else {
+            setChefs(prev => [...prev, newUser as any]);
+        }
+        setIsAddModalOpen(false);
     };
 
     const handleDeleteClick = (user: UserWithRole) => {
@@ -104,9 +154,12 @@ export default function Artisans() {
             <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="flex gap-4 w-1/2">
                     <Searchbar onSearch={handleSearch} className="flex-1" />
-                    <Button variant="primary" className="w-auto gap-2">
-                        <Plus size={16} />
-                        <span>Ajouter un artisan</span>
+                    <Button
+                        variant="primary"
+                        onClick={() => setIsAddModalOpen(true)}
+                    >
+                        <Plus className="mr-2" size={16} />
+                        Ajouter {view === 'artisans' ? 'un artisan' : 'un chef'}
                     </Button>
                 </div>
                 <div className="flex p-1 relative">
@@ -199,6 +252,15 @@ export default function Artisans() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {isAddModalOpen && (
+                <AddArtisan
+                    isOpen={isAddModalOpen}
+                    onClose={() => setIsAddModalOpen(false)}
+                    onAdd={handleAdd}
+                    view={view}
+                />
             )}
         </div>
     );
