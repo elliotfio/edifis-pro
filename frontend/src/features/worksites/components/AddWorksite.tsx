@@ -17,6 +17,14 @@ const specialityOptions = WORKSITE_SPECIALITIES.map((speciality) => ({
     value: speciality,
 }));
 
+// Fonction utilitaire pour formater une date en YYYY-MM-DD
+const formatDate = (date: string | Date | null | undefined): string => {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+};
+
 export default function AddWorksite({ isOpen, onClose, onAddWorksite }: AddWorksiteProps) {
     const {
         register,
@@ -30,8 +38,8 @@ export default function AddWorksite({ isOpen, onClose, onAddWorksite }: AddWorks
     } = useForm({
         defaultValues: {
             name: '',
-            startDate: '',
-            endDate: '',
+            startDate: formatDate(new Date()),
+            endDate: formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // +30 jours par défaut
             budget: undefined,
             cost: undefined,
             address: '',
@@ -99,8 +107,8 @@ export default function AddWorksite({ isOpen, onClose, onAddWorksite }: AddWorks
                     name: data.name,
                     address: data.address,
                     coordinates: data.coordinates,
-                    startDate: data.startDate,
-                    endDate: data.endDate,
+                    startDate: formatDate(data.startDate),
+                    endDate: formatDate(data.endDate),
                     budget: budget.toString(),
                     cost: cost.toString(),
                     specialities_needed: data.specialities_needed
@@ -166,6 +174,7 @@ export default function AddWorksite({ isOpen, onClose, onAddWorksite }: AddWorks
                         label="Date de début"
                         type="date"
                         error={errors.startDate?.message}
+                        defaultValue={formatDate(new Date())}
                         {...register('startDate', { required: 'La date de début est requise' })}
                     />
 
@@ -173,6 +182,7 @@ export default function AddWorksite({ isOpen, onClose, onAddWorksite }: AddWorks
                         label="Date de fin"
                         type="date"
                         error={errors.endDate?.message}
+                        defaultValue={formatDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))}
                         {...register('endDate', { required: 'La date de fin est requise' })}
                     />
 

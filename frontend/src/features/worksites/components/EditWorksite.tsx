@@ -1,11 +1,8 @@
 import { AddressInput } from '@/components/ui/AddressInput';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import Modal from '@/components/ui/Modal';
 import { SelectInput } from '@/components/ui/SelectInput';
-import { Worksite, WORKSITE_SPECIALITIES, WorksiteSpeciality } from '@/types/worksiteType';
-import { WorksiteEditFormData, worksiteEditSchema } from '@/validators/worksiteValidator';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Worksite, WORKSITE_SPECIALITIES } from '@/types/worksiteType';
 import { CreditCard, Pickaxe, Text } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -22,7 +19,24 @@ const specialityOptions = WORKSITE_SPECIALITIES.map((speciality) => ({
     value: speciality,
 }));
 
+// Fonction utilitaire pour s'assurer qu'une valeur est un tableau
+const ensureArray = (value: any): string[] => {
+    if (!value) return [];
+    if (typeof value === 'string') return value.split(',').map(s => s.trim()).filter(Boolean);
+    if (Array.isArray(value)) return value;
+    return [];
+};
+
+// Fonction utilitaire pour formater une date en YYYY-MM-DD
+const formatDate = (date: string | Date | null | undefined): string => {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+};
+
 export default function EditWorksite({
+    isOpen,
     onClose,
     onEditWorksite,
     worksite,
@@ -36,16 +50,17 @@ export default function EditWorksite({
         clearErrors,
         setError,
         reset,
-    } = useForm<WorksiteEditFormData>({
-        resolver: zodResolver(worksiteEditSchema),
+    } = useForm({
         defaultValues: {
             name: worksite.name,
-            startDate: worksite.startDate,
-            endDate: worksite.endDate,
+            startDate: formatDate(worksite.startDate),
+            endDate: formatDate(worksite.endDate),
             budget: worksite.budget,
+            cost: worksite.cost,
             address: worksite.address,
             coordinates: worksite.coordinates,
-            specialities_needed: worksite.specialities_needed || [],
+            specialities_needed: ensureArray(worksite.specialities_needed),
+            status: worksite.status
         },
     });
 
@@ -53,29 +68,31 @@ export default function EditWorksite({
     useEffect(() => {
         reset({
             name: worksite.name,
-            startDate: worksite.startDate,
-            endDate: worksite.endDate,
+            startDate: formatDate(worksite.startDate),
+            endDate: formatDate(worksite.endDate),
             budget: worksite.budget,
+            cost: worksite.cost,
             address: worksite.address,
             coordinates: worksite.coordinates,
-            specialities_needed: worksite.specialities_needed || [],
+            specialities_needed: ensureArray(worksite.specialities_needed),
+            status: worksite.status
         });
     }, [worksite, reset]);
 
     const selectedSpecialities = watch('specialities_needed');
 
     const handleSpecialitySelect = (speciality: string) => {
-        const currentSpecialities = selectedSpecialities || [];
-        if (currentSpecialities.includes(speciality as WorksiteSpeciality)) {
+        const currentSpecialities = ensureArray(selectedSpecialities);
+        if (currentSpecialities.includes(speciality)) {
             setValue(
                 'specialities_needed',
-                currentSpecialities.filter((s) => s !== (speciality as WorksiteSpeciality)),
+                currentSpecialities.filter((s) => s !== speciality),
                 { shouldValidate: true }
             );
         } else {
             setValue(
                 'specialities_needed',
-                [...currentSpecialities, speciality as WorksiteSpeciality],
+                [...currentSpecialities, speciality],
                 { shouldValidate: true }
             );
         }
@@ -87,7 +104,7 @@ export default function EditWorksite({
         isValid: boolean
     ) => {
         setValue('address', address, { shouldValidate: true });
-        setValue('coordinates', coordinates, { shouldValidate: true });
+        setValue('coordinates', { x: coordinates[0], y: coordinates[1] }, { shouldValidate: true });
 
         if (!isValid && address) {
             setError('address', {
@@ -99,72 +116,88 @@ export default function EditWorksite({
         }
     };
 
-    const onSubmit = (data: WorksiteEditFormData) => {
-        const updatedWorksite: Worksite = {
-            ...worksite,
-            ...data,
-            coordinates: data.coordinates || worksite.coordinates,
-            cost: Math.round(data.budget * (Math.random() * (0.7 - 0.3) + 0.3)),
-            id: worksite.id,
-            status: worksite.status,
-        };
+    const onSubmit = async (data: any) => {
+        try {
+            const response = await fetch(`http://localhost:3000/api/worksites/${worksite.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: data.name,
+                    address: data.address,
+                    coordinates: data.coordinates,
+                    startDate: formatDate(data.startDate),
+                    endDate: formatDate(data.endDate),
+                    status: data.status,
+                    budget: data.budget.toString(),
+                    cost: data.cost.toString(),
+                    specialities_needed: ensureArray(data.specialities_needed)
+                })
+            });
 
-        onEditWorksite(updatedWorksite);
-        onClose();
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erreur lors de la modification du chantier');
+            }
+
+            const result = await response.json();
+            onEditWorksite(result.worksite);
+            onClose();
+
+        } catch (error: any) {
+            console.error('Erreur lors de la modification du chantier:', error);
+            setError('root', {
+                type: 'manual',
+                message: error.message || 'Erreur lors de la modification du chantier'
+            });
+        }
     };
 
+    if (!isOpen) return null;
+
     return (
-        <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            onClick={onClose}
-        >
-            <div className="bg-white rounded-lg p-6 w-[500px]" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center gap-2 mb-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1000]">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                <div className="flex gap-2">
                     <Pickaxe size={24} />
-                    <h2 className="text-xl font-semibold">Modifier le chantier</h2>
+                    <h2 className="text-lg font-medium mb-4">Modifier le chantier</h2>
                 </div>
-                <form
-                    onSubmit={handleSubmit(onSubmit)}
-                    className="space-y-4"
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSubmit(onSubmit)();
-                        }
-                    }}
-                >
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <Input
                         label="Nom du projet"
-                        rightIcon={<Text size={20} className="text-gray-400" />}
+                        rightIcon={<Text size={20} className='text-gray-400' />}
                         error={errors.name?.message}
-                        {...register('name')}
+                        {...register('name', { required: 'Le nom est requis' })}
                     />
 
                     <SelectInput
                         label="Spécialités requises"
                         name="specialities"
                         options={specialityOptions}
-                        value={selectedSpecialities || []}
+                        value={ensureArray(selectedSpecialities)}
                         onChange={handleSpecialitySelect}
                         error={errors.specialities_needed?.message}
                         disabled={selectedSpecialities?.length >= 10}
                         isMulti
                     />
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            type="date"
-                            label="Date de début"
-                            error={errors.startDate?.message}
-                            {...register('startDate')}
-                        />
-                        <Input
-                            type="date"
-                            label="Date de fin"
-                            error={errors.endDate?.message}
-                            {...register('endDate')}
-                        />
-                    </div>
+                    <Input
+                        label="Date de début"
+                        type="date"
+                        error={errors.startDate?.message}
+                        defaultValue={formatDate(worksite.startDate)}
+                        {...register('startDate', { required: 'La date de début est requise' })}
+                    />
+
+                    <Input
+                        label="Date de fin"
+                        type="date"
+                        error={errors.endDate?.message}
+                        defaultValue={formatDate(worksite.endDate)}
+                        {...register('endDate', { required: 'La date de fin est requise' })}
+                    />
 
                     <AddressInput
                         label="Adresse"
@@ -175,17 +208,35 @@ export default function EditWorksite({
 
                     <Input
                         label="Budget"
-                        rightIcon={<CreditCard size={20} className="text-gray-400" />}
+                        rightIcon={<CreditCard size={20} className='text-gray-400' />}
                         type="number"
                         error={errors.budget?.message}
-                        {...register('budget', { valueAsNumber: true })}
+                        {...register('budget', { 
+                            required: 'Le budget est requis',
+                            min: { value: 1000, message: 'Le budget minimum est de 1000€' }
+                        })}
                     />
 
-                    <div className="flex justify-end gap-4 pt-4">
-                        <Button variant="secondary" type="button" onClick={onClose}>
+                    {errors.root && (
+                        <div className="text-red-500 text-sm mt-2">
+                            {errors.root.message}
+                        </div>
+                    )}
+
+                    <div className="flex justify-end gap-3 mt-6">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                reset();
+                                onClose();
+                            }}
+                        >
                             Annuler
                         </Button>
-                        <Button type="submit">Enregistrer</Button>
+                        <Button type="submit" variant="primary">
+                            Enregistrer
+                        </Button>
                     </div>
                 </form>
             </div>
