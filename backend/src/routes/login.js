@@ -1,64 +1,28 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
+const pool = require('../config/db'); // Assure-toi que le chemin est correct
+const { generateTokens } = require('../utils/jwt');
+
 const router = express.Router();
-const pool = require('../config/db');
 
-// GET all chefs
-router.get('/', async (req, res) => {
+router.post('/', async (req, res) => {
+    console.log(`📡 Route appelée : POST ${req.originalUrl}`);
+    console.log("📝 Données reçues :", req.body);
+
+    const { email, password } = req.body;
+
     try {
-        const [chefs] = await pool.query(`
-            SELECT c.*, u.firstName, u.lastName, u.email, u.role, u.date_creation
-            FROM chef c
-            INNER JOIN users u ON c.user_id = u.id
-            WHERE u.role = 'chef'
-        `);
+        const [[user]] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+        if (!user) return res.status(400).json({ message: 'Identifiants incorrects' });
 
-        // Formater les données pour chaque chef
-        const formattedChefs = chefs.map(chef => ({
-            ...chef,
-            user_id: chef.employe_id,
-            niveau_experience: chef.niveau_experience,
-            specialites: [chef.specialites], // Le niveau d'expérience est considéré comme une spécialité
-            disponible: true, // À ajuster selon vos besoins
-            history_worksite: chef.history_worksite ? chef.history_worksite.split(',') : []
-        }));
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ message: 'Identifiants incorrects' });
 
-        res.json(formattedChefs);
-    } catch (err) {
-        console.error("❌ Erreur lors de la récupération des chefs:", err);
-        res.status(500).json({ message: 'Erreur serveur', error: err });
-    }
-});
+        const tokens = generateTokens(user);
+        res.json({ ...tokens, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, role: user.role } });
 
-// GET chef by user_id
-router.get('/:user_id', async (req, res) => {
-    try {
-        const userId = req.params.user_id;
-        const [[chef]] = await pool.query(`
-            SELECT c.*, u.firstName, u.lastName, u.email, u.role, u.date_creation
-            FROM chef c
-            INNER JOIN users u ON c.user_id = u.id
-            WHERE c.user_id = ? AND u.role = 'chef'
-        `, [userId]);
-
-        if (!chef) {
-            return res.status(404).json({ message: 'Chef non trouvé' });
-        }
-
-        // Formater les données du chef
-        const formattedChef = {
-            ...chef,
-            user_id: chef.user_id,
-                
-            niveau_experience: chef.niveau_experience,
-            specialites: [chef.specialites], // Le niveau d'expérience est considéré comme une spécialité
-            disponible: true, // À ajuster selon vos besoins
-            history_worksite: chef.history_worksite ? chef.history_worksite.split(',') : []
-        };
-        
-        res.json(formattedChef);
-    } catch (err) {
-        console.error("❌ Erreur lors de la récupération du chef:", err);
-        res.status(500).json({ message: 'Erreur serveur', error: err });
+    } catch (error) {
+        res.status(500).json({ message: 'Erreur serveur', error });
     }
 });
 
