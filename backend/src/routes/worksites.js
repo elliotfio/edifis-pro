@@ -41,4 +41,89 @@ router.get('/:id', async (req, res) => {
     }
 });
 
+// Add a new worksite
+router.post('/', async (req, res) => {
+    try {
+        const {
+            id,
+            name,
+            address,
+            coordinates,
+            startDate,
+            endDate,
+            status,
+            budget,
+            cost,
+            specialities_needed
+        } = req.body;
+
+        // Validation des données requises
+        const requiredFields = ['name', 'address', 'coordinates', 'budget', 'cost', 'specialities_needed', 'startDate', 'endDate'];
+        const missingFields = requiredFields.filter(field => !req.body[field]);
+
+        if (missingFields.length > 0) {
+            return res.status(400).json({
+                message: 'Données manquantes',
+                missingFields
+            });
+        }
+
+        // Validation supplémentaire pour coordinates
+        if (!coordinates.x || !coordinates.y) {
+            return res.status(400).json({
+                message: 'Coordonnées invalides',
+                required: 'Les coordonnées doivent avoir x et y'
+            });
+        }
+
+        // Gestion des spécialités (peut être une chaîne ou un tableau)
+        let specialitiesString = specialities_needed;
+        if (Array.isArray(specialities_needed)) {
+            specialitiesString = specialities_needed.join(', ');
+        }
+
+        // Générer un ID unique si non fourni
+        const worksite_id = id || Math.floor(Math.random() * 10000).toString();
+
+        const query = `
+            INSERT INTO worksites (
+                id,
+                name,
+                address,
+                coordinates,
+                startDate,
+                endDate,
+                status,
+                budget,
+                cost,
+                specialities_needed
+            ) VALUES (?, ?, ?, POINT(?, ?), ?, ?, ?, ?, ?, ?)
+        `;
+
+        const values = [
+            worksite_id,
+            name,
+            address,
+            coordinates.x,
+            coordinates.y,
+            startDate,
+            endDate,
+            status || 'attributed', 
+            budget,
+            cost,
+            specialitiesString
+        ];
+
+        const [result] = await pool.query(query, values);
+        res.status(201).json({
+            message: 'Chantier créé avec succès',
+            worksite_id: worksite_id
+        });
+
+    } catch (err) {
+        console.error("❌ Erreur lors de la création du chantier:", err);
+        res.status(500).json({ message: 'Erreur serveur', error: err.message });
+    }
+});
+
 module.exports = router;
