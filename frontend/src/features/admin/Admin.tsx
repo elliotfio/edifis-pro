@@ -38,7 +38,7 @@ export default function Admin() {
             try {
                 setIsLoading(true);
                 setError(null);
-                const response = await fetch('http://localhost:3000/api/auth/users');
+                const response = await fetch('http://localhost:3000/api/users');
                 if (!response.ok) {
                     throw new Error('Erreur lors de la récupération des utilisateurs');
                 }
