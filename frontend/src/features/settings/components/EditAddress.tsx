@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { MapPin } from 'lucide-react';
+import { MapPin, Building2, MapIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -57,7 +57,7 @@ export default function EditAddress({ isOpen, onClose, onEdit, initialData }: Ed
                             label="Numéro et rue"
                             placeholder="123 rue de Paris"
                             error={errors.street?.message}
-                            rightIcon={<Map size={20} />}
+                            rightIcon={<MapIcon size={20} />}
                             {...register('street')}
                         />
 
