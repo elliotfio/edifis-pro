@@ -2,116 +2,102 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db'); 
-require('dotenv').config();
 const verifyToken = require('../middleware/jwtAuth');
+require('dotenv').config();
 
 const router = express.Router();
 
+// Générer un token d'accès et un refresh token
+const generateTokens = (user) => {
+    const accessToken = jwt.sign(
+        { id: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '15m' }
+    );
+
+    const refreshToken = jwt.sign(
+        { id: user.id },
+        process.env.JWT_REFRESH_SECRET,
+        { expiresIn: '7d' }
+    );
+    return { accessToken, refreshToken };
+};
+
 router.post('/register', async (req, res) => {
     const { firstName, lastName, email, password, role } = req.body;
+
+    console.log("Données reçues :", req.body); // Ajout de log
+
+    if (!password) {
+        return res.status(400).json({ message: "Le mot de passe est requis" });
+    }
 
     try {
         const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
         if (rows.length > 0) return res.status(400).json({ message: 'Email déjà utilisé' });
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcrypt.hash(password, 10); // Ici, on est sûr que password est défini
 
-        await pool.query('INSERT INTO users (firstName, lastName, email, password, role, date_creation) VALUES (?, ?, ?, ?, ?, CURDATE())',
-            [firstName, lastName, email, hashedPassword, role || 'employe']
+        const userRole = role === 'admin' ? 'admin' : 'employe';
+        const [result] = await pool.query(
+            'INSERT INTO users (firstName, lastName, email, password, role) VALUES (?, ?, ?, ?, ?)',
+            [firstName, lastName, email, hashedPassword, userRole]
         );
 
-        res.status(201).json({ message: 'Utilisateur créé avec succès' });
+        const newUser = { id: result.insertId, firstName, lastName, email, role: userRole };
+        const tokens = generateTokens(newUser);
+
+        res.status(201).json({ ...tokens, user: newUser });
+
     } catch (err) {
-        console.error("❌ Erreur lors de la création :", err);
-        res.status(500).json({ message: 'Erreur serveur', error: err });
+        console.error('Erreur lors de l’enregistrement :', err);
+        res.status(500).json({ message: 'Erreur serveur, veuillez réessayer plus tard' });
     }
 });
 
-router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    console.log(" Requête reçue pour login :", req.body); 
 
+// Connexion
+router.post('/login', async (req, res) => {
+    const { email, password } = req.body; // ✅ Correspond au JSON envoyé
     try {
         const [[user]] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-        console.log(" Utilisateur trouvé :", user); 
-
         if (!user) {
-            console.log(" Utilisateur non trouvé !");
             return res.status(400).json({ message: 'Identifiants incorrects' });
         }
 
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        console.log(" Comparaison des mots de passe :", passwordMatch);
-
-        if (!passwordMatch) {
+        const isMatch = await bcrypt.compare(password, user.password); // ✅ Vérifie avec la colonne correcte
+        if (!isMatch) {
             return res.status(400).json({ message: 'Identifiants incorrects' });
         }
 
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '1h' });
-        console.log(" Token généré :", token);
-
-        res.json({ 
-            token, 
-            user: { 
-                id: user.id, 
-                firstName: user.firstName,
-                lastName: user.lastName,
-                role: user.role
-            } 
-        });
-
+        const tokens = generateTokens(user);
+        res.json({ ...tokens, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, role: user.role } });
     } catch (error) {
-        console.error(" Erreur serveur :", error);
+        console.error("Erreur lors du login :", error);
         res.status(500).json({ message: 'Erreur serveur', error });
     }
 });
 
-router.get('/users', async (req, res) => {
-    try {
-        const [rows] = await pool.query('SELECT id, firstName, lastName, email, role, date_creation FROM users');
-        console.log(" Liste des utilisateurs :", rows);
-        res.json(rows);
-    } catch (err) {
-        console.error(" Erreur lors de la récupération :", err);
-        res.status(500).json({ message: 'Erreur serveur', error: err });
-    }
-});
 
-router.get('/users/:id', verifyToken, async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const [[user]] = await pool.query('SELECT id, firstName, lastName, email, role, date_creation FROM users WHERE id = ?', [userId]);
+// Rafraîchir le token
+router.post('/refresh-token', (req, res) => {
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(401).json({ message: 'Refresh token requis' });
 
-        if (!user) {
-            return res.status(404).json({ message: 'Utilisateur non trouvé' });
-        }
-
-        res.json(user); 
-    } catch (err) {
-        console.error(" Erreur lors de la récupération de l'utilisateur :", err);
-        res.status(500).json({ message: 'Erreur serveur', error: err });
-    }
-});
-
-router.delete('/users/:id', verifyToken, async (req, res) => {
-    try {
-        const userId = req.params.id;
-        const [[user]] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
+    jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, async (err, decoded) => {
+        if (err) return res.status(403).json({ message: 'Refresh token invalide' });
         
-        if (!user) {
-            return res.status(404).json({ 
-                message: 'Utilisateur non trouvé',
-                details: `Aucun utilisateur avec l'ID ${userId} n'existe dans la base de données`
-            });
-        }
+        const [[user]] = await pool.query('SELECT * FROM users WHERE id = ?', [decoded.id]);
+        if (!user) return res.status(403).json({ message: 'Utilisateur non trouvé' });
 
-        await pool.query('DELETE FROM users WHERE id = ?', [userId]);
-        res.json({ message: 'Utilisateur supprimé avec succès' });
-    } catch (err) {
-        console.error(" Erreur lors de la suppression :", err);
-        res.status(500).json({ message: 'Erreur serveur', error: err });
-    }
+        const tokens = generateTokens(user);
+        res.json(tokens);
+    });
+});
+
+// Déconnexion (coté client, on supprime juste les cookies)
+router.post('/logout', (req, res) => {
+    res.json({ message: 'Déconnexion réussie' });
 });
 
 module.exports = router;
