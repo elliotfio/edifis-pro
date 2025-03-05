@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/Button';
 import Searchbar from '@/components/ui/Searchbar';
 import mockData from '@/mocks/userMock.json';
 import { ArtisanFormData, ArtisanUser, ChefUser } from '@/types/userType';
@@ -9,6 +8,7 @@ import AddArtisan from './components/AddArtisan';
 import ArtisansList from './components/ArtisansList';
 import ChefsList from './components/ChefsList';
 import EditArtisan from './components/EditArtisan';
+import { Button } from '@/components/ui/Button';
 
 type SortDirection = 'asc' | 'desc' | null;
 

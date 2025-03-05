@@ -43,9 +43,13 @@ pool.getConnection()
 // Routes
 const authRoutes = require('./src/routes/auth'); 
 const userRoutes = require('./src/routes/users');
+const artisanRoutes = require('./src/routes/artisans');
+const chefRoutes = require('./src/routes/chefs');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/artisans', artisanRoutes);
+app.use('/api/chefs', chefRoutes);
 
 // Route de base
 app.get('/', (req, res) => {

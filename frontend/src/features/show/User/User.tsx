@@ -14,7 +14,7 @@ import {
     User,
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
-import userMockData from '@/mocks/userMock.json';
+import { useState, useEffect } from 'react';
 import worksiteMockData from '@/mocks/worksiteMock.json';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import { LatLngExpression, divIcon } from 'leaflet';
@@ -37,15 +37,7 @@ interface ArtisanData {
     note_moyenne: number;
     current_worksite: string | null;
     history_worksite: string[];
-}
-
-interface ChefData {
-    user_id: number;
-    years_experience: number;
-    current_worksite: string | null;
-    history_worksite: string[];
-    specialites: string[];
-    disponible: boolean;
+    niveau_experience?: string;
 }
 
 interface Worksite {
@@ -70,28 +62,91 @@ const customIcon = divIcon({
 
 export default function UserShow() {
     const { id } = useParams();
+    const [user, setUser] = useState<User | null>(null);
+    const [artisanData, setArtisanData] = useState<ArtisanData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // Find the user
-    const user = (userMockData.users as User[]).find(
-        (u) => u.id.toString() === id && (u.role === 'artisan' || u.role === 'chef')
-    );
+    useEffect(() => {
+        const fetchUserAndData = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
 
-    if (!user) {
-        return <div className="p-6">Artisan non trouvé</div>;
-    }
+                // Récupérer les infos de l'utilisateur
+                const userResponse = await fetch(`http://localhost:3000/api/users/${id}`);
+                if (!userResponse.ok) {
+                    throw new Error('Erreur lors de la récupération des données utilisateur');
+                }
+                const userData = await userResponse.json();
+                const formattedUser: User = {
+                    id: userData.id,
+                    firstName: userData.firstName,
+                    lastName: userData.lastName,
+                    email: userData.email,
+                    role: userData.role,
+                    date_creation: userData.date_creation
+                };
+                setUser(formattedUser);
 
-    // Find artisan or chef data
-    const artisanData = user.role === 'artisan' 
-        ? (userMockData.artisans as ArtisanData[]).find(a => a.user_id === user.id)
-        : (userMockData.chefs as ChefData[]).find(c => c.user_id === user.id);
+                // Si c'est un artisan ou un chef, récupérer ses données spécifiques
+                if (userData.role === 'artisan') {
+                    const artisanResponse = await fetch(`http://localhost:3000/api/artisans/${userData.id}`);
+                    if (!artisanResponse.ok) {
+                        throw new Error('Erreur lors de la récupération des données artisan');
+                    }
+                    const artisanData = await artisanResponse.json();
+                    setArtisanData({
+                        user_id: artisanData.user_id,
+                        specialites: artisanData.specialites || [],
+                        disponible: artisanData.disponible || false,
+                        note_moyenne: artisanData.note_moyenne || 0,
+                        current_worksite: artisanData.current_worksite || null,
+                        history_worksite: artisanData.history_worksite || []
+                    });
+                } else if (userData.role === 'chef') {
+                    const chefResponse = await fetch(`http://localhost:3000/api/chefs/${userData.id}`);
+                    if (!chefResponse.ok) {
+                        throw new Error('Erreur lors de la récupération des données chef');
+                    }
+                    const chefData = await chefResponse.json();
+                    console.log(chefData)
+                    setArtisanData({
+                        user_id: chefData.user_id,
+                        specialites: chefData.specialites || [],
+                        disponible: chefData.disponible || false,
+                        note_moyenne: 0,
+                        current_worksite: chefData.current_worksite || null,
+                        history_worksite: chefData.history_worksite || [],
+                        niveau_experience: chefData.niveau_experience || 'Junior'
+                    });
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                setError(error instanceof Error ? error.message : 'Une erreur est survenue');
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-    if (!artisanData) {
+        fetchUserAndData();
+    }, [id]);
+
+    if (isLoading) return <div>Chargement...</div>;
+    if (error) return <div>Erreur: {error}</div>;
+    if (!user) return <div>Utilisateur non trouvé</div>;
+
+    // Si c'est un artisan mais qu'on n'a pas ses données
+    if (user.role === 'artisan' && !artisanData) {
         return <div className="p-6">Données de l'artisan non trouvées</div>;
     }
 
+    // Utiliser artisanData au lieu de la donnée mockée
+    const currentArtisanData = user.role === 'artisan' || user.role === 'chef' ? artisanData : null;
+
     // Find current worksite data if exists
-    const currentWorksite = artisanData.current_worksite 
-        ? (worksiteMockData.worksites as unknown as Worksite[]).find(w => w.id === artisanData.current_worksite)
+    const currentWorksite = currentArtisanData && currentArtisanData.current_worksite
+        ? (worksiteMockData.worksites as unknown as Worksite[]).find(w => w.id === currentArtisanData.current_worksite)
         : null;
 
     return (
@@ -107,13 +162,12 @@ export default function UserShow() {
                         {user.firstName} {user.lastName}
                     </h1>
                     <div
-                        className={`px-3 py-1 rounded-full text-sm ${
-                            artisanData.disponible
+                        className={`px-3 py-1 rounded-full text-sm ${currentArtisanData && currentArtisanData.disponible
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
-                        }`}
+                            }`}
                     >
-                        {artisanData.disponible ? 'Disponible' : 'Indisponible'}
+                        {currentArtisanData && currentArtisanData.disponible ? 'Disponible' : 'Indisponible'}
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
                         <HardHat size={16} />
@@ -145,10 +199,10 @@ export default function UserShow() {
                                 {new Date(user.date_creation).toLocaleDateString('fr-FR')}
                             </span>
                         </div>
-                        {user.role === 'chef' && (
+                        {user.role === 'chef' && currentArtisanData && (
                             <div className="flex items-center gap-2 text-gray-600">
                                 <Star size={16} />
-                                <span>{(artisanData as ChefData).years_experience} ans d'expérience</span>
+                                <span>Niveau : {currentArtisanData.niveau_experience || 'Non renseigné'}</span>
                             </div>
                         )}
                     </div>
@@ -160,14 +214,18 @@ export default function UserShow() {
                         <h2 className="font-medium">Spécialités</h2>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {artisanData.specialites.map((specialite) => (
-                            <span
-                                key={specialite}
-                                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                            >
-                                {specialite}
-                            </span>
-                        ))}
+                        {currentArtisanData?.specialites?.[0] !== null && currentArtisanData?.specialites?.length! > 0 ? (
+                            currentArtisanData?.specialites.map((specialite) => (
+                                <span
+                                    key={specialite}
+                                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                                >
+                                    {specialite}
+                                </span>
+                            ))
+                        ) : (
+                            <span className="text-gray-600">Non renseigné</span>
+                        )}
                     </div>
                 </div>
 
@@ -182,29 +240,29 @@ export default function UserShow() {
                                 <div>
                                     <div className="text-sm text-gray-600">Note moyenne</div>
                                     <div className="text-2xl font-bold flex items-center gap-1">
-                                        {(artisanData as ArtisanData).note_moyenne}
+                                        {currentArtisanData && currentArtisanData.note_moyenne}
                                         <Star size={20} className="text-yellow-200 fill-yellow-200" />
                                     </div>
                                 </div>
                                 <div>
                                     <div className="text-sm text-gray-600">Chantiers terminés</div>
                                     <div className="text-2xl font-bold">
-                                        {(artisanData as ArtisanData).history_worksite.length}
+                                        {currentArtisanData && currentArtisanData.history_worksite.length}
                                     </div>
                                 </div>
                             </>
                         ) : (
                             <>
                                 <div>
-                                    <div className="text-sm text-gray-600">Années d'expérience</div>
+                                    <div className="text-sm text-gray-600">Niveau d'expérience</div>
                                     <div className="text-2xl font-bold">
-                                        {(artisanData as ChefData).years_experience} ans
+                                        {currentArtisanData?.niveau_experience || 'Non renseigné'}
                                     </div>
                                 </div>
                                 <div>
                                     <div className="text-sm text-gray-600">Chantiers terminés</div>
                                     <div className="text-2xl font-bold">
-                                        {(artisanData as ChefData).history_worksite.length}
+                                        {currentArtisanData && currentArtisanData.history_worksite.length}
                                     </div>
                                 </div>
                             </>
