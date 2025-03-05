@@ -2,7 +2,7 @@ import { Calendar } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Calendar as BigCalendar, momentLocalizer, View, ToolbarProps } from 'react-big-calendar';
 import moment from 'moment';
-import CustomToolbar from '@/components/ui/CustomToolbar';
+import CustomToolbar from '@/features/planification/components/CustomToolbar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 moment.locale('fr');

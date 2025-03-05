@@ -1,4 +1,5 @@
 import type React from "react"
+import { Button } from "./Button"
 
 interface PaginationProps {
   currentPage: number
@@ -66,13 +67,13 @@ export const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages,
           {number}
         </button>
       ))}
-      <button
+      <Button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Suivant
-      </button>
+      </Button>
     </nav>
   )
 }
