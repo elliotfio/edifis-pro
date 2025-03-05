@@ -30,20 +30,65 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// POST create artisan
+// POST new user
 router.post('/', async (req, res) => {
-    const { user_id, specialites } = req.body;
-
+    const connection = await pool.getConnection();
+    
     try {
-        const [result] = await pool.query(`
-            INSERT INTO artisan (user_id, specialites)
-            VALUES (?, ?)
-        `, [user_id, specialites.join(',')]);
+        await connection.beginTransaction();
+        
+        const { firstName, lastName, email, role, specialites, years_experience } = req.body;
+        const password = `${lastName}.${firstName}`;
+        const date_creation = new Date().toISOString().split('T')[0];
 
-        res.status(201).json({ message: 'Artisan créé avec succès', artisanId: result.insertId });
+        // Insert into users table
+        const [result] = await connection.query(
+            'INSERT INTO users (firstName, lastName, email, password, role, date_creation) VALUES (?, ?, ?, ?, ?, ?)',
+            [firstName, lastName, email, password, role, date_creation]
+        );
+
+        const userId = result.insertId;
+
+        // Based on role, insert into corresponding table
+        switch (role.toLowerCase()) {
+            case 'employe':
+                await connection.query('INSERT INTO employe (user_id) VALUES (?)', [userId]);
+                break;
+            case 'artisan':
+                if (!specialites || !Array.isArray(specialites) || specialites.length === 0) {
+                    throw new Error('Spécialités requises pour un artisan');
+                }
+                await connection.query(
+                    'INSERT INTO artisan (user_id, specialites, disponible) VALUES (?, ?, true)',
+                    [userId, specialites.join(', ')]
+                );
+                break;
+            case 'chef':
+                if (!years_experience) {
+                    throw new Error('Années d\'expérience requises pour un chef');
+                }
+                await connection.query(
+                    'INSERT INTO chef (user_id, years_experience) VALUES (?, ?)',
+                    [userId, years_experience]
+                );
+                break;
+            default:
+                throw new Error('Role invalide');
+        }
+
+        await connection.commit();
+        
+        res.status(201).json({
+            message: 'Utilisateur créé avec succès',
+            userId: userId
+        });
+
     } catch (err) {
-        console.error("❌ Erreur lors de la création de l'artisan:", err);
-        res.status(500).json({ message: 'Erreur serveur', error: err });
+        await connection.rollback();
+        console.error("❌ Erreur lors de la création de l'utilisateur:", err);
+        res.status(400).json({ message: err.message || 'Erreur lors de la création de l\'utilisateur' });
+    } finally {
+        connection.release();
     }
 });
 

@@ -6,6 +6,7 @@ import UsersList from './components/UsersList';
 import AddUser from './components/AddUser';
 import EditUser from './components/EditUser';
 import { UserFormData } from '@/validators/userValidator';
+import axios from 'axios';
 
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -44,7 +45,6 @@ export default function Admin() {
                 }
                 const data = await response.json();
                 
-                // Transformation des données pour correspondre à la structure UserWithRole
                 const formattedUsers: UserWithRole[] = data.map((user: any) => ({
                     user: {
                         id: user.id,
@@ -55,7 +55,7 @@ export default function Admin() {
                         date_creation: user.date_creation || new Date().toISOString()
                     },
                     user_id: user.id,
-                    specialites: [] // À implémenter quand les spécialités seront disponibles
+                    specialites: [] 
                 }));
 
                 setUsers(formattedUsers);
@@ -105,20 +105,36 @@ export default function Admin() {
     };
 
     const handleAddUser = async (data: UserFormData) => {
-        const newUser: UserWithRole = {
-            user: {
-                id: users.length + 1, // Pour le mock, en production ce serait géré par le backend
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email,
-                role: data.role,
-                date_creation: new Date().toISOString(),
-            },
-            user_id: users.length + 1,
-            specialites: data.specialites || [],
-        };
+        try {
+            const response = await axios.post('http://localhost:3000/api/users', data);
+            
+            if (!response.data) {
+                throw new Error('Erreur lors de l\'ajout de l\'utilisateur');
+            }
 
-        setUsers((currentUsers) => [...currentUsers, newUser]);
+            const result = response.data;
+            
+            const newUser: UserWithRole = {
+                user: {
+                    id: result.userId,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    email: data.email,
+                    role: data.role,
+                    date_creation: new Date().toISOString(),
+                },
+                user_id: result.userId,
+                specialites: data.specialites || [],
+            };
+
+            setUsers((currentUsers) => [...currentUsers, newUser]);
+            setIsAddModalOpen(false);
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                throw new Error(error.response.data.message || 'Erreur lors de l\'ajout de l\'utilisateur');
+            }
+            throw error;
+        }
     };
 
     const handleEditUser = async (data: UserFormData) => {
@@ -148,7 +164,6 @@ export default function Admin() {
     const filteredData = useMemo(() => {
         let data = [...users];
 
-        // Appliquer le tri
         if (sortColumn && sortDirection) {
             data.sort((a, b) => {
                 let compareA, compareB;
@@ -174,7 +189,6 @@ export default function Admin() {
             });
         }
 
-        // Appliquer le filtre de recherche
         if (searchQuery) {
             const searchLower = searchQuery.toLowerCase();
             data = data.filter(
@@ -206,70 +220,31 @@ export default function Admin() {
                 </Button>
             </div>
 
-            {error ? (
-                <div className="text-red-500 p-4 rounded-lg bg-red-50">
-                    {error}
-                </div>
-            ) : isLoading ? (
-                <div className="flex items-center justify-center p-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-                </div>
-            ) : (
-                <UsersList
-                    data={filteredData}
-                    sortColumn={sortColumn}
-                    sortDirection={sortDirection}
-                    onSort={handleSort}
-                    onDelete={handleDeleteClick}
-                    onEdit={handleEditClick}
+            <UsersList
+                users={filteredData}
+                onSort={handleSort}
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onDeleteClick={handleDeleteClick}
+                onEditClick={handleEditClick}
+                isLoading={isLoading}
+            />
+
+            {isAddModalOpen && (
+                <AddUser
+                    isOpen={isAddModalOpen}
+                    onClose={() => setIsAddModalOpen(false)}
+                    onSubmit={handleAddUser}
                 />
             )}
-
-            <AddUser 
-                isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-            />
 
             {editingUser && (
                 <EditUser
-                    isOpen={true}
+                    user={editingUser}
+                    isOpen={!!editingUser}
                     onClose={() => setEditingUser(null)}
-                    onEdit={handleEditUser}
-                    initialData={{
-                        firstName: editingUser.user.firstName,
-                        lastName: editingUser.user.lastName,
-                        email: editingUser.user.email,
-                        role: editingUser.user.role as UserFormData['role'],
-                        specialites: editingUser.specialites,
-                        years_experience: undefined, // You might want to add this to your UserWithRole type if needed
-                    }}
+                    onSubmit={handleEditUser}
                 />
-            )}
-
-            {deleteModalUser && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-[400px]">
-                        <h3 className="text-lg font-semibold mb-2">Supprimer l'utilisateur</h3>
-                        <p className="text-gray-600 mb-6">
-                            Êtes-vous sûr de vouloir supprimer l'utilisateur "
-                            {deleteModalUser.user.firstName} {deleteModalUser.user.lastName}" ? Cette action est irréversible.
-                        </p>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                className="px-4 py-2 rounded hover:bg-gray-100"
-                                onClick={() => setDeleteModalUser(null)}
-                            >
-                                Annuler
-                            </button>
-                            <button
-                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                                onClick={handleDeleteConfirm}
-                            >
-                                Supprimer
-                            </button>
-                        </div>
-                    </div>
-                </div>
             )}
         </div>
     );

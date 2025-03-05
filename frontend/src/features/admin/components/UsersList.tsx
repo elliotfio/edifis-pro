@@ -26,23 +26,34 @@ type UserWithRole = {
 };
 
 interface UsersListProps {
-    data: UserWithRole[];
+    users: UserWithRole[];
     sortColumn: string;
     sortDirection: 'asc' | 'desc' | null;
     onSort: (column: string) => void;
-    onDelete: (user: UserWithRole) => void;
-    onEdit: (user: UserWithRole) => void;
+    onDeleteClick: (user: UserWithRole) => void;
+    onEditClick: (user: UserWithRole) => void;
+    isLoading: boolean;
 }
 
 export default function UsersList({
-    data,
+    users,
     sortColumn,
     sortDirection,
     onSort,
-    onDelete,
-    onEdit,
+    onDeleteClick,
+    onEditClick,
+    isLoading,
 }: UsersListProps) {
     const navigate = useNavigate();
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+        );
+    }
+
     return (
         <Table>
             <TableHeader>
@@ -76,7 +87,7 @@ export default function UsersList({
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {data.map((item) => (
+                {users.map((item) => (
                     <TableRow key={item.user.id}>
                         <TableCell>
                             {item.user.firstName} {item.user.lastName}
@@ -106,7 +117,7 @@ export default function UsersList({
                                 variant="primary"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    onEdit(item);
+                                    onEditClick(item);
                                 }}
                             >
                                 <Pencil size={16} />
@@ -115,7 +126,7 @@ export default function UsersList({
                                 variant="primary"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    onDelete(item);
+                                    onDeleteClick(item);
                                 }}
                             >
                                 <Trash size={16} />
