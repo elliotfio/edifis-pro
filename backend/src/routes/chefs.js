@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
         const formattedChefs = chefs.map(chef => ({
             ...chef,
             user_id: chef.employe_id,
-            niveau_experience: chef.niveau_experience,
+            years_experience: chef.years_experience,
             specialites: [chef.specialites], // Le niveau d'expérience est considéré comme une spécialité
             disponible: true, // À ajuster selon vos besoins
             history_worksite: chef.history_worksite ? chef.history_worksite.split(',') : []
@@ -49,7 +49,7 @@ router.get('/:user_id', async (req, res) => {
             ...chef,
             user_id: chef.user_id,
                 
-            niveau_experience: chef.niveau_experience,
+            years_experience: chef.years_experience,
             specialites: [chef.specialites], // Le niveau d'expérience est considéré comme une spécialité
             disponible: true, // À ajuster selon vos besoins
             history_worksite: chef.history_worksite ? chef.history_worksite.split(',') : []

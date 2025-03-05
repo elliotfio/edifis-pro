@@ -103,12 +103,12 @@ export default function ChefsList({
                             <TableCell>
                                 <span
                                     className={`px-4 py-1 rounded-full text-sm ${
-                                        chef.chantiers_en_cours < 4
+                                        !chef.current_worksite
                                             ? 'bg-green-100 text-green-800'
-                                            : 'bg-orange-100 text-orange-800'
+                                            : 'bg-red-100 text-red-800'
                                     }`}
                                 >
-                                    {chef.chantiers_en_cours < 4 ? 'Disponible' : 'Occupé'}
+                                    {!chef.current_worksite ? 'Disponible' : 'Indisponible'}
                                 </span>
                             </TableCell>
                             <TableCell className="flex items-center gap-2">

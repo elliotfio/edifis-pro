@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `artisan` (
 
 CREATE TABLE IF NOT EXISTS `chef` (
   `user_id` int NOT NULL,
-  `niveau_experience` varchar(50) NOT NULL,
+  `years_experience` varchar(50) NOT NULL,
   `current_worksite` varchar(50) DEFAULT NULL,
   `history_worksite` text,
   PRIMARY KEY (`user_id`),
@@ -193,17 +193,17 @@ INSERT INTO `worksites` (`id`, `name`, `address`, `startDate`, `endDate`, `statu
 INSERT INTO `employe` (`user_id`)
 SELECT id FROM `users` WHERE role = 'employe';
 
--- 4. Insertion des chefs
-INSERT INTO `chef` (`user_id`, `niveau_experience`, `current_worksite`)
+-- 4. Insertion des chefs (un seul chef par chantier)
+INSERT INTO `chef` (`user_id`, `years_experience`, `current_worksite`)
 VALUES 
-((SELECT id FROM users WHERE email = 'sophie.petit@edifis.fr'), 'Senior', '1'),
-((SELECT id FROM users WHERE email = 'thomas.leroy@edifis.fr'), 'Senior', '2'),
-((SELECT id FROM users WHERE email = 'julie.moreau@edifis.fr'), 'Confirmé', '3'),
-((SELECT id FROM users WHERE email = 'nicolas.roux@edifis.fr'), 'Junior', NULL),
-((SELECT id FROM users WHERE email = 'marie.simon@edifis.fr'), 'Confirmé', NULL),
-((SELECT id FROM users WHERE email = 'pierre.laurent@edifis.fr'), 'Senior', NULL);
+((SELECT id FROM users WHERE email = 'sophie.petit@edifis.fr'), '35', '1'),
+((SELECT id FROM users WHERE email = 'thomas.leroy@edifis.fr'), '42', '2'),
+((SELECT id FROM users WHERE email = 'julie.moreau@edifis.fr'), '20', '3'),
+((SELECT id FROM users WHERE email = 'nicolas.roux@edifis.fr'), '7', NULL),
+((SELECT id FROM users WHERE email = 'marie.simon@edifis.fr'), '27', NULL),
+((SELECT id FROM users WHERE email = 'pierre.laurent@edifis.fr'), '30', NULL);
 
--- 5. Insertion des artisans
+-- 5. Insertion des artisans (seulement sur les chantiers qui ont un chef)
 INSERT INTO `artisan` (`user_id`, `specialites`, `disponible`, `note_moyenne`, `current_worksite`)
 SELECT 
     u.id,
@@ -216,14 +216,22 @@ SELECT
     END,
     TRUE,
     ROUND(RAND() * 2 + 3, 1),  -- Note entre 3.0 et 5.0
-    CASE (u.id % 4)
+    CASE (u.id % 3)  -- Modifié pour n'assigner que sur les chantiers 1, 2 et 3 qui ont des chefs
         WHEN 0 THEN '1'
         WHEN 1 THEN '2'
         WHEN 2 THEN '3'
         ELSE NULL
     END
 FROM users u
-WHERE u.role = 'artisan';
+WHERE u.role = 'artisan'
+AND (
+    CASE (u.id % 3)  -- Vérifie que le chantier assigné a un chef
+        WHEN 0 THEN EXISTS (SELECT 1 FROM chef WHERE current_worksite = '1')
+        WHEN 1 THEN EXISTS (SELECT 1 FROM chef WHERE current_worksite = '2')
+        WHEN 2 THEN EXISTS (SELECT 1 FROM chef WHERE current_worksite = '3')
+        ELSE FALSE
+    END
+);
 
 -- 6. Insertion des planifications
 INSERT INTO `planification` (`worksites_id`, `user_id`, `role`, `affectation_date`)

@@ -32,7 +32,7 @@ export default function Artisans() {
         mockData.artisans.map((artisan) => ({
             ...artisan,
             user: mockData.users.find((user) => user.id === artisan.user_id)!,
-            nombre_chantiers: artisan.history_worksite.length + (artisan.current_worksite ? 1 : 0),
+            all_worksites: artisan.history_worksite.length + (artisan.current_worksite ? 1 : 0),
         }))
     );
     const [chefs, setChefs] = useState(
@@ -91,13 +91,13 @@ export default function Artisans() {
                 ? {
                       ...baseUser,
                       note_moyenne: 0,
-                      nombre_chantiers: 0,
+                      all_worksites: 0,
                   }
                 : {
                       ...baseUser,
                       note_moyenne: 0,
                       years_experience: data.years_experience || 0,
-                      chantiers_en_cours: 0,
+                      current_worksite: 0,
                       chantiers_termines: 0,
                   };
 
@@ -133,13 +133,13 @@ export default function Artisans() {
             specialites: formData.specialites,
             disponible: editingUser.disponible,
             note_moyenne: editingUser.note_moyenne,
-            nombre_chantiers: (editingUser.history_worksite?.length || 0) + (editingUser.current_worksite ? 1 : 0),
+            all_worksites: (editingUser.history_worksite?.length || 0) + (editingUser.current_worksite ? 1 : 0),
             current_worksite: editingUser.current_worksite,
             history_worksite: editingUser.history_worksite,
             ...(view === 'chefs' && {
                 years_experience: (editingUser as ChefUser).years_experience,
-                chantiers_en_cours: (editingUser as ChefUser).chantiers_en_cours,
-                chantiers_termines: (editingUser as ChefUser).chantiers_termines
+                current_worksite: (editingUser as ChefUser).current_worksite,
+                all_worksites: (editingUser as ChefUser).history_worksite?.length || 0,
             })
         };
 
