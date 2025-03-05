@@ -45,11 +45,13 @@ const authRoutes = require('./src/routes/auth');
 const userRoutes = require('./src/routes/users');
 const artisanRoutes = require('./src/routes/artisans');
 const chefRoutes = require('./src/routes/chefs');
+const worksitesRoutes = require('./src/routes/worksites');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/artisans', artisanRoutes);
 app.use('/api/chefs', chefRoutes);
+app.use('/api/worksites', worksitesRoutes);
 
 // Route de base
 app.get('/', (req, res) => {

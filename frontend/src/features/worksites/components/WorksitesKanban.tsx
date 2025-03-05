@@ -44,6 +44,8 @@ export default function Kanban({ data }: WorksitesKanbanProps) {
         }
     };
 
+    console.log(data);
+
     useEffect(() => {
         checkScroll();
         const container = scrollContainerRef.current;

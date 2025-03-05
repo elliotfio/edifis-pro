@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/db');
+const db = require('../config/db');
 
 // GET all chefs
 router.get('/', async (req, res) => {
     try {
-        const [chefs] = await pool.query(`
+        const [chefs] = await db.query(`
             SELECT c.*, u.firstName, u.lastName, u.email, u.role, u.date_creation
             FROM chef c
             INNER JOIN users u ON c.user_id = u.id
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
         const formattedChefs = chefs.map(chef => ({
             ...chef,
             user_id: chef.employe_id,
-            niveau_experience: chef.niveau_experience,
+            years_experience: chef.years_experience,
             specialites: [chef.specialites], // Le niveau d'expérience est considéré comme une spécialité
             disponible: true, // À ajuster selon vos besoins
             history_worksite: chef.history_worksite ? chef.history_worksite.split(',') : []
@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
 router.get('/:user_id', async (req, res) => {
     try {
         const userId = req.params.user_id;
-        const [[chef]] = await pool.query(`
+        const [[chef]] = await db.query(`
             SELECT c.*, u.firstName, u.lastName, u.email, u.role, u.date_creation
             FROM chef c
             INNER JOIN users u ON c.user_id = u.id
@@ -49,7 +49,7 @@ router.get('/:user_id', async (req, res) => {
             ...chef,
             user_id: chef.user_id,
                 
-            niveau_experience: chef.niveau_experience,
+            years_experience: chef.years_experience,
             specialites: [chef.specialites], // Le niveau d'expérience est considéré comme une spécialité
             disponible: true, // À ajuster selon vos besoins
             history_worksite: chef.history_worksite ? chef.history_worksite.split(',') : []

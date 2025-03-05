@@ -27,7 +27,7 @@ export interface Worksite {
     startDate: string;
     endDate: string;
     status: WorksiteStatus;
-    coordinates: [number, number];
+    coordinates: { x: number; y: number };
     cost: number;
     budget: number;
     specialities_needed: WorksiteSpeciality[];

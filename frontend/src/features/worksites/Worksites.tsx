@@ -1,10 +1,9 @@
 import { Button } from '@/components/ui/Button';
 import Searchbar from '@/components/ui/Searchbar';
-import worksiteMockData from '@/mocks/worksiteMock.json';
 import { Worksite } from '@/types/worksiteType';
 import { AnimatePresence, motion } from 'framer-motion';
 import { List, MapPin, Plus, LayoutGrid } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import AddWorksite from './components/AddWorksite';
 import WorksitesKanban from './components/WorksitesKanban';
 import WorksitesList from './components/WorksitesList';
@@ -16,8 +15,29 @@ export default function Worksites() {
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
     const [searchQuery, setSearchQuery] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [worksites, setWorksites] = useState<Worksite[]>(worksiteMockData.worksites as Worksite[]);
+    const [worksites, setWorksites] = useState<Worksite[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [deleteModalWorksite, setDeleteModalWorksite] = useState<Worksite | null>(null);
+
+    useEffect(() => {
+        const fetchWorksites = async () => {
+            try {
+                const response = await fetch('http://localhost:3000/api/worksites');
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la récupération des chantiers');
+                }
+                const data = await response.json();
+                setWorksites(data);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchWorksites();
+    }, []);
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
@@ -77,6 +97,14 @@ export default function Worksites() {
     }, [worksites, searchQuery, sortColumn, sortDirection]);
 
     const renderView = () => {
+        if (isLoading) {
+            return <div className="text-center py-8">Chargement...</div>;
+        }
+
+        if (error) {
+            return <div className="text-center py-8 text-red-600">{error}</div>;
+        }
+
         switch (view) {
             case 'list':
                 return (

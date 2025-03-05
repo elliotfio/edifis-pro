@@ -2,11 +2,10 @@ import { useParams } from 'react-router-dom';
 import { Worksite as WorksiteType } from '@/types/worksiteType';
 import { formatDateToDDMMYYYY } from '@/services/formattedDateService';
 import { getColorStatus, getLabelStatus } from '@/services/badgeService';
-import worksiteMockData from '@/mocks/worksiteMock.json';
-import userMockData from '@/mocks/userMock.json';
 import { LatLngExpression, divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, Marker, TileLayer } from 'react-leaflet';
+import { useState, useEffect } from 'react';
 import {
     ArrowLeft,
     ArrowRight,
@@ -32,18 +31,109 @@ const customIcon = divIcon({
     iconAnchor: [16, 16],
 });
 
+interface User {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: string;
+    date_creation: string;
+}
+
+interface WorksiteUser {
+    user: User;
+    years_experience?: string;
+    disponible?: boolean;
+    specialites?: string[];
+    note_moyenne?: number;
+}
+
 export default function Worksite() {
     const { id } = useParams();
+    const [worksite, setWorksite] = useState<WorksiteType | null>(null);
+    const [worksiteUsers, setWorksiteUsers] = useState<WorksiteUser[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // In a real app, you would fetch this from an API
-    const worksite = (worksiteMockData.worksites as WorksiteType[]).find((w) => w.id === id);
+    useEffect(() => {
+        const fetchWorksite = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
 
-    if (!worksite) {
-        return <div className="p-6">Chantier non trouvé</div>;
-    }
+                // Récupérer les données du chantier
+                const response = await fetch(`http://localhost:3000/api/worksites/${id}`);
+                if (!response.ok) {
+                    throw new Error('Worksite not found');
+                }
+                const data = await response.json();
+                setWorksite(data);
+
+                // Récupérer tous les utilisateurs du chantier
+                const [chefsResponse, artisansResponse] = await Promise.all([
+                    fetch('http://localhost:3000/api/chefs'),
+                    fetch('http://localhost:3000/api/artisans')
+                ]);
+
+                const [chefsData, artisansData] = await Promise.all([
+                    chefsResponse.json(),
+                    artisansResponse.json()
+                ]);
+
+                // Filtrer les chefs et artisans de ce chantier
+                const worksiteChefs = chefsData.filter((chef: any) => chef.current_worksite === id);
+                const worksiteArtisans = artisansData.filter((artisan: any) => artisan.current_worksite === id);
+
+                // Récupérer les données utilisateur pour chaque personne
+                const userPromises = [...worksiteChefs, ...worksiteArtisans].map(
+                    (person: any) => fetch(`http://localhost:3000/api/users/${person.user_id}`).then(res => res.json())
+                );
+
+                const users = await Promise.all(userPromises);
+
+                // Combiner les données utilisateur avec leurs rôles spécifiques
+                const formattedUsers: WorksiteUser[] = users.map((user: User) => {
+                    const chef = worksiteChefs.find((c: any) => c.user_id === user.id);
+                    const artisan = worksiteArtisans.find((a: any) => a.user_id === user.id);
+                    
+                    if (chef) {
+                        return {
+                            user,
+                            years_experience: chef.years_experience,
+                            disponible: chef.disponible
+                        };
+                    } else if (artisan) {
+                        return {
+                            user,
+                            specialites: artisan.specialites,
+                            note_moyenne: artisan.note_moyenne,
+                            disponible: artisan.disponible
+                        };
+                    }
+                    return { user };
+                });
+
+                setWorksiteUsers(formattedUsers);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                setError('Erreur lors du chargement des données');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchWorksite();
+    }, [id]);
+
+    if (isLoading) return <div>Chargement...</div>;
+    if (error) return <div>Erreur: {error}</div>;
+    if (!worksite) return <div>Chantier non trouvé</div>;
 
     const statusColor = getColorStatus(worksite.status);
     const statusLabel = getLabelStatus(worksite.status);
+
+    const chefs = worksiteUsers.filter(u => u.user.role === 'chef');
+    const artisans = worksiteUsers.filter(u => u.user.role === 'artisan');
 
     return (
         <div className="container mx-auto p-6">
@@ -122,14 +212,14 @@ export default function Worksite() {
             {/* Map */}
             <div className="h-[500px] rounded-lg overflow-hidden mb-8">
                 <MapContainer
-                    center={worksite.coordinates as LatLngExpression}
+                    center={[worksite.coordinates.x, worksite.coordinates.y] as LatLngExpression}
                     zoom={15}
                     style={{ height: '100%', width: '100%' }}
                     zoomControl={false}
                     attributionControl={false}
                 >
                     <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-                    <Marker position={worksite.coordinates as LatLngExpression} icon={customIcon} />
+                    <Marker position={[worksite.coordinates.x, worksite.coordinates.y] as LatLngExpression} icon={customIcon} />
                 </MapContainer>
             </div>
 
@@ -144,52 +234,37 @@ export default function Worksite() {
                     <div>
                         <h3 className="text-lg font-medium mb-3">Chefs de chantier</h3>
                         <div className="space-y-3">
-                            {userMockData.chefs
-                                .filter((chef) => chef.current_worksite === id)
-                                .map((chef) => {
-                                    const user = userMockData.users.find(
-                                        (u) => u.id === chef.user_id
-                                    );
-                                    if (!user) return null;
-
-                                    return (
-                                        <Link
-                                            to={`/user/${user.id}`}
-                                            key={user.id}
-                                            className="block p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors duration-200"
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <div className="font-medium">
-                                                        {user.firstName} {user.lastName}
-                                                    </div>
-                                                    <div className="text-sm text-gray-600">
-                                                        {chef.years_experience} ans d'expérience
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div
-                                                        className={`px-2 py-1 rounded-full text-xs ${
-                                                            chef.disponible
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : 'bg-red-100 text-red-800'
-                                                        }`}
-                                                    >
-                                                        {chef.disponible
-                                                            ? 'Disponible'
-                                                            : 'Indisponible'}
-                                                    </div>
-                                                    <ArrowRight
-                                                        size={16}
-                                                        className="text-primary"
-                                                    />
-                                                </div>
+                            {chefs.map(({ user, years_experience, disponible }) => (
+                                <Link
+                                    to={`/user/${user.id}`}
+                                    key={user.id}
+                                    className="block p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors duration-200"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="font-medium">
+                                                {user.firstName} {user.lastName}
                                             </div>
-                                        </Link>
-                                    );
-                                })}
-                            {userMockData.chefs.filter((chef) => chef.current_worksite === id)
-                                .length === 0 && (
+                                            <div className="text-sm text-gray-600">
+                                                {years_experience} ans d'expérience
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className={`px-2 py-1 rounded-full text-xs ${
+                                                    disponible
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}
+                                            >
+                                                {disponible ? 'Disponible' : 'Indisponible'}
+                                            </div>
+                                            <ArrowRight size={16} className="text-primary" />
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                            {chefs.length === 0 && (
                                 <div className="text-gray-600 text-sm">
                                     Aucun chef de chantier assigné
                                 </div>
@@ -201,54 +276,45 @@ export default function Worksite() {
                     <div>
                         <h3 className="text-lg font-medium mb-3">Ouvriers</h3>
                         <div className="space-y-3">
-                            {userMockData.artisans
-                                .filter((artisan) => artisan.current_worksite === id)
-                                .map((artisan) => {
-                                    const user = userMockData.users.find(
-                                        (u) => u.id === artisan.user_id
-                                    );
-                                    if (!user) return null;
-
-                                    return (
-                                        <Link
-                                            to={`/user/${user.id}`}
-                                            key={user.id}
-                                            className="block p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors duration-200"
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <div className="font-medium">
-                                                        {user.firstName} {user.lastName}
-                                                    </div>
-                                                    <div className="text-sm text-gray-600">
-                                                        {artisan.specialites.join(', ')}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div
-                                                        className={`px-2 py-1 rounded-full text-xs ${
-                                                            artisan.disponible
-                                                                ? 'bg-green-100 text-green-800'
-                                                                : 'bg-red-100 text-red-800'
-                                                        }`}
-                                                    >
-                                                        {artisan.disponible
-                                                            ? 'Disponible'
-                                                            : 'Indisponible'}
-                                                    </div>
-                                                    <ArrowRight
-                                                        size={16}
-                                                        className="text-primary"
-                                                    />
-                                                </div>
+                            {artisans.map(({ user, specialites, note_moyenne, disponible }) => (
+                                <Link
+                                    to={`/user/${user.id}`}
+                                    key={user.id}
+                                    className="block p-4 border border-gray-200 rounded-lg hover:border-primary transition-colors duration-200"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="font-medium">
+                                                {user.firstName} {user.lastName}
                                             </div>
-                                        </Link>
-                                    );
-                                })}
-                            {userMockData.artisans.filter(
-                                (artisan) => artisan.current_worksite === id
-                            ).length === 0 && (
-                                <div className="text-gray-600 text-sm">Aucun ouvrier assigné</div>
+                                            <div className="text-sm text-gray-600">
+                                                {specialites?.join(', ')}
+                                            </div>
+                                            {note_moyenne && (
+                                                <div className="text-sm text-gray-600">
+                                                    Note: {note_moyenne}/5
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className={`px-2 py-1 rounded-full text-xs ${
+                                                    disponible
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}
+                                            >
+                                                {disponible ? 'Disponible' : 'Indisponible'}
+                                            </div>
+                                            <ArrowRight size={16} className="text-primary" />
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                            {artisans.length === 0 && (
+                                <div className="text-gray-600 text-sm">
+                                    Aucun ouvrier assigné
+                                </div>
                             )}
                         </div>
                     </div>

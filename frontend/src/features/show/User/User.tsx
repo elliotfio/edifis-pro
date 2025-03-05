@@ -37,7 +37,7 @@ interface ArtisanData {
     note_moyenne: number;
     current_worksite: string | null;
     history_worksite: string[];
-    niveau_experience?: string;
+    years_experience?: string;
 }
 
 interface Worksite {
@@ -118,7 +118,7 @@ export default function UserShow() {
                         note_moyenne: 0,
                         current_worksite: chefData.current_worksite || null,
                         history_worksite: chefData.history_worksite || [],
-                        niveau_experience: chefData.niveau_experience || 'Junior'
+                        years_experience: chefData.years_experience || 'Junior'
                     });
                 }
             } catch (error) {
@@ -199,12 +199,6 @@ export default function UserShow() {
                                 {new Date(user.date_creation).toLocaleDateString('fr-FR')}
                             </span>
                         </div>
-                        {user.role === 'chef' && currentArtisanData && (
-                            <div className="flex items-center gap-2 text-gray-600">
-                                <Star size={16} />
-                                <span>Niveau : {currentArtisanData.niveau_experience || 'Non renseigné'}</span>
-                            </div>
-                        )}
                     </div>
                 </div>
 
@@ -256,7 +250,7 @@ export default function UserShow() {
                                 <div>
                                     <div className="text-sm text-gray-600">Niveau d'expérience</div>
                                     <div className="text-2xl font-bold">
-                                        {currentArtisanData?.niveau_experience || 'Non renseigné'}
+                                        {currentArtisanData?.years_experience || 'Non renseigné'} ans
                                     </div>
                                 </div>
                                 <div>

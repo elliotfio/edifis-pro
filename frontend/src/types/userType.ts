@@ -24,7 +24,6 @@ export interface ArtisanUser {
     specialites: string[];
     disponible: boolean;
     note_moyenne: number;
-    nombre_chantiers: number;
     current_worksite?: string;
     history_worksite?: string[];
 }
@@ -35,8 +34,6 @@ export interface ChefUser {
     specialites: string[];
     disponible: boolean;
     years_experience: number;
-    chantiers_en_cours: number;
-    chantiers_termines: number;
     current_worksite?: string;
     history_worksite?: string[];
     note_moyenne?: number;

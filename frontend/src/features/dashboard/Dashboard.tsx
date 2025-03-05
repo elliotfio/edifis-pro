@@ -1,17 +1,18 @@
-import worksiteMock from '@/mocks/worksiteMock.json';
+import { useEffect, useState } from 'react';
 import { Worksite } from '@/types/worksiteType';
+import { User } from '@/types/userType';
 import {
     ChartColumn,
-    HardHat,
     LayoutDashboard,
-    LucideCalendar,
     LucideCalendarArrowUp,
-    Pickaxe,
-    PiggyBank,
+    LucideCalendar,
     TrendingUp,
-    User2,
     UsersRound,
     Wallet,
+    PiggyBank,
+    Pickaxe,
+    HardHat,
+    User2,
 } from 'lucide-react';
 import {
     Bar,
@@ -29,16 +30,62 @@ import {
 const COLORS = ['#5D6ABD', '#EBF0FE', '#E7E895'];
 
 const Dashboard = () => {
-    const worksites: Worksite[] = worksiteMock.worksites as Worksite[];
+    const [worksites, setWorksites] = useState<Worksite[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Calculer les statistiques
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [worksitesResponse, usersResponse] = await Promise.all([
+                    fetch('http://localhost:3000/api/worksites'),
+                    fetch('http://localhost:3000/api/users')
+                ]);
+
+                if (!worksitesResponse.ok || !usersResponse.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+
+                const [worksitesData, usersData] = await Promise.all([
+                    worksitesResponse.json(),
+                    usersResponse.json()
+                ]);
+
+                setWorksites(worksitesData);
+                setUsers(usersData);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    // Calculer les statistiques des chantiers
     const plannedWorksites = worksites.filter((w) => w.status === 'planned').length;
     const inProgressWorksites = worksites.filter((w) => w.status === 'in_progress').length;
     const completedWorksites = worksites.filter((w) => w.status === 'completed').length;
 
-    const totalRevenue = worksites.reduce((sum, worksite) => sum + worksite.budget, 0);
-    const totalCosts = worksites.reduce((sum, worksite) => sum + worksite.cost, 0);
-    const profit = totalRevenue - totalCosts;
+    const activeWorksites = worksites.filter(w => w.status === 'in_progress' || w.status === 'completed');
+    const totalRevenue = Number(activeWorksites.reduce((sum, worksite) => sum + Number(worksite.budget), 0)).toFixed(2);
+    const totalCosts = Number(activeWorksites.reduce((sum, worksite) => sum + Number(worksite.cost), 0)).toFixed(2);
+    const profit = (Number(totalRevenue) - Number(totalCosts)).toFixed(2);
+
+    // Calculer les statistiques des employés par rôle
+    const roleStats = {
+        artisan: users.filter(user => user.role === 'artisan').length,
+        chef: users.filter(user => user.role === 'chef').length,
+        employe: users.filter(user => user.role === 'employe').length
+    };
+
+    // Données pour le graphique circulaire
+    const employeeData = [
+        { name: 'Artisan', value: roleStats.artisan, icon: Pickaxe },
+        { name: 'Chef de chantier', value: roleStats.chef, icon: HardHat },
+        { name: 'Employé administratif', value: roleStats.employe, icon: User2 }
+    ];
 
     // Données pour le graphique d'évolution
     const monthlyData = Array.from({ length: 12 }, (_, i) => ({
@@ -49,12 +96,9 @@ const Dashboard = () => {
         }).length,
     }));
 
-    // Données pour le graphique circulaire
-    const employeeData = [
-        { name: 'Ouvrier', value: 60 },
-        { name: 'Chef de chantier', value: 25 },
-        { name: 'Employé administratif', value: 15 },
-    ];
+    if (isLoading) {
+        return <div className="p-6">Chargement...</div>;
+    }
 
     return (
         <div className="p-6">
@@ -185,13 +229,11 @@ const Dashboard = () => {
                                                 (sum, item) => sum + item.value,
                                                 0
                                             );
-                                            const percentage = ((data.value / total) * 100).toFixed(
-                                                1
-                                            );
+                                            const percentage = ((data.value / total) * 100).toFixed(1);
 
                                             const getIcon = (name: string) => {
                                                 switch (name) {
-                                                    case 'Ouvrier':
+                                                    case 'Artisan':
                                                         return (
                                                             <Pickaxe
                                                                 size={18}
@@ -226,6 +268,23 @@ const Dashboard = () => {
                                                         </p>
                                                     </div>
                                                     <div
+                                                        className="flex items-center justify-between p-2 rounded-md mb-2"
+                                                        style={{
+                                                            backgroundColor:
+                                                                COLORS[
+                                                                    (payload[0] as any).dataIndex %
+                                                                        COLORS.length
+                                                                ] + '20',
+                                                        }}
+                                                    >
+                                                        <span className="text-xs text-gray-600">
+                                                            Pourcentage
+                                                        </span>
+                                                        <span className="text-sm font-semibold">
+                                                            {percentage}%
+                                                        </span>
+                                                    </div>
+                                                    <div
                                                         className="flex items-center justify-between p-2 rounded-md"
                                                         style={{
                                                             backgroundColor:
@@ -236,10 +295,10 @@ const Dashboard = () => {
                                                         }}
                                                     >
                                                         <span className="text-xs text-gray-600">
-                                                            Effectif
+                                                            Nombre
                                                         </span>
                                                         <span className="text-sm font-semibold">
-                                                            {percentage}%
+                                                            {data.value}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -279,7 +338,7 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <div className="flex gap-2 items-end">
-                        <div className="text-7xl font-bold my-2">
+                        <div className="text-6xl font-bold my-2">
                             {totalRevenue.toLocaleString()}€
                         </div>
                         <div className="text-xs text-gray-600 mb-4">Depuis le 1er Janvier</div>
@@ -297,7 +356,7 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <div className="flex gap-2 items-end">
-                        <div className="text-7xl font-bold my-2">{profit.toLocaleString()}€</div>
+                        <div className="text-6xl font-bold my-2">{profit.toLocaleString()}€</div>
                         <div className="text-xs text-gray-600 mb-4">Depuis le 1er Janvier</div>
                     </div>
                 </div>
