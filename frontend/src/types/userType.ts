@@ -14,6 +14,7 @@ export interface ArtisanFormData {
     firstName: string;
     lastName: string;
     email: string;
+    password?: string;
     specialites: string[];
     years_experience?: number;
 }

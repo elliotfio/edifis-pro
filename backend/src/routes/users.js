@@ -47,41 +47,4 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PUT update artisan
-router.put('/:id', async (req, res) => {
-    const { id } = req.params;
-    const { specialites } = req.body;
-
-    try {
-        await pool.query(`
-            UPDATE artisan
-            SET specialites = ?
-            WHERE user_id = ?
-        `, [specialites.join(','), id]);
-
-        res.json({ message: 'Artisan mis à jour avec succès' });
-    } catch (err) {
-        console.error("❌ Erreur lors de la mise à jour de l'artisan:", err);
-        res.status(500).json({ message: 'Erreur serveur', error: err });
-    }
-});
-
-// DELETE artisan
-router.delete('/:id', async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        await pool.query(`
-            DELETE FROM artisan
-            WHERE user_id = ?
-        `, [id]);
-
-        res.json({ message: 'Artisan supprimé avec succès' });
-    } catch (err) {
-        console.error("❌ Erreur lors de la suppression de l'artisan:", err);
-        res.status(500).json({ message: 'Erreur serveur', error: err });
-    }
-});
-
-
 module.exports = router;
