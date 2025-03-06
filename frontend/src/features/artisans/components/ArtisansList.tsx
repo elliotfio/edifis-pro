@@ -43,40 +43,40 @@ export default function ArtisansList({
                     <TableRow>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'nom' ? sortDirection : null}
-                            onClick={() => onSort('nom')}
+                            sortDirection={sortColumn === 'firstName' ? sortDirection : null}
+                            onClick={() => onSort('firstName')}
                             className="w-[20%]"
                         >
                             NOM
                         </TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'adresse' ? sortDirection : null}
-                            onClick={() => onSort('adresse')}
-                            className="w-[25%]"
+                            sortDirection={sortColumn === 'email' ? sortDirection : null}
+                            onClick={() => onSort('email')}
+                            className="w-[20%]"
                         >
                             ADRESSE
                         </TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'date_arrivee' ? sortDirection : null}
-                            onClick={() => onSort('date_arrivee')}
+                            sortDirection={sortColumn === 'date_creation' ? sortDirection : null}
+                            onClick={() => onSort('date_creation')}
                             className="w-[14%]"
                         >
                             DATE D'ARRIVÉE
                         </TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'specialisation' ? sortDirection : null}
-                            onClick={() => onSort('specialisation')}
-                            className="w-[15%]"
+                            sortDirection={sortColumn === 'specialites' ? sortDirection : null}
+                            onClick={() => onSort('specialites')}
+                            className="w-[20%]"
                         >
                             SPÉCIALISATION
                         </TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'status' ? sortDirection : null}
-                            onClick={() => onSort('status')}
+                            sortDirection={sortColumn === 'disponible' ? sortDirection : null}
+                            onClick={() => onSort('disponible')}
                             className="w-[15%]"
                         >
                             STATUS
@@ -106,15 +106,19 @@ export default function ArtisansList({
                                                           /["\[\]]/g,
                                                           ''
                                                       );
-                                                      return (
+                                                      return truncateText(
                                                           cleanSpec.charAt(0).toUpperCase() +
-                                                          cleanSpec.slice(1)
+                                                              cleanSpec.slice(1),
+                                                          8
                                                       );
                                                   })
                                                   .join(', ')
-                                            : JSON.stringify(artisan.specialites).replace(
-                                                  /["\[\]]/g,
-                                                  ''
+                                            : truncateText(
+                                                  JSON.stringify(artisan.specialites).replace(
+                                                      /["\[\]]/g,
+                                                      ''
+                                                  ),
+                                                  16
                                               )}
                                     </>
                                 ) : (

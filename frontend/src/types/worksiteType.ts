@@ -8,7 +8,71 @@ export type WorksiteSpeciality =
     | "Couverture"
     | "Isolation"
     | "Chauffage"
-    | "Climatisation";
+    | "Climatisation"
+    | "Gros œuvre"
+    | "Charpente"
+    | "Plâtrerie"
+    | "Sanitaire"
+    | "Domotique"
+    | "Éclairage"
+    | "Béton"
+    | "Décoration"
+    | "Revêtements muraux"
+    | "Cloisons"
+    | "Enduits"
+    | "Façades"
+    | "Acoustique"
+    | "Thermique"
+    | "Plaques de plâtre"
+    | "Faux plafonds"
+    | "Staff"
+    | "Agencement"
+    | "Ébénisterie"
+    | "Parquet"
+    | "Revêtements de sol"
+    | "Automatisation"
+    | "Ossature bois"
+    | "Vitrerie"
+    | "Fenêtres"
+    | "Faïence"
+    | "Mosaïque"
+    | "Terrassement"
+    | "Fondations"
+    | "Métallerie"
+    | "Serrurerie"
+    | "Sols"
+    | "Toiture"
+    | "Zinguerie"
+    | "Ascenseurs"
+    | "Mécanique"
+    | "Paysagisme"
+    | "Aménagement extérieur"
+    | "Jardinage"
+    | "Isolation extérieure"
+    | "Étanchéité"
+    | "Toiture-terrasse"
+    | "Démolition"
+    | "Déconstruction"
+    | "Bois"
+    | "Carrosserie"
+    | "Soudure"
+    | "Ferronnerie"
+    | "Forge"
+    | "Miroiterie"
+    | "Fumisterie"
+    | "Cheminées"
+    | "Ramonage"
+    | "Entretien conduits"
+    | "Nettoyage"
+    | "Travaux en hauteur"
+    | "Sécurité"
+    | "Assemblage"
+    | "Bardage"
+    | "Montage"
+    | "Granit"
+    | "Pierre"
+    | "Pavage"
+    | "Dallage";
 
 export type WorksiteStatus =
     | 'no_attributed'
@@ -43,7 +107,71 @@ export const WORKSITE_SPECIALITIES: WorksiteSpeciality[] = [
     "Couverture",
     "Isolation",
     "Chauffage",
-    "Climatisation"
+    "Climatisation",
+    "Gros œuvre",
+    "Charpente",
+    "Plâtrerie",
+    "Sanitaire",
+    "Domotique",
+    "Éclairage",
+    "Béton",
+    "Décoration",
+    "Revêtements muraux",
+    "Cloisons",
+    "Enduits",
+    "Façades",
+    "Acoustique",
+    "Thermique",
+    "Plaques de plâtre",
+    "Faux plafonds",
+    "Staff",
+    "Agencement",
+    "Ébénisterie",
+    "Parquet",
+    "Revêtements de sol",
+    "Automatisation",
+    "Ossature bois",
+    "Vitrerie",
+    "Fenêtres",
+    "Faïence",
+    "Mosaïque",
+    "Terrassement",
+    "Fondations",
+    "Métallerie",
+    "Serrurerie",
+    "Sols",
+    "Toiture",
+    "Zinguerie",
+    "Ascenseurs",
+    "Mécanique",
+    "Paysagisme",
+    "Aménagement extérieur",
+    "Jardinage",
+    "Isolation extérieure",
+    "Étanchéité",
+    "Toiture-terrasse",
+    "Démolition",
+    "Déconstruction",
+    "Bois",
+    "Carrosserie",
+    "Soudure",
+    "Ferronnerie",
+    "Forge",
+    "Miroiterie",
+    "Fumisterie",
+    "Cheminées",
+    "Ramonage",
+    "Entretien conduits",
+    "Nettoyage",
+    "Travaux en hauteur",
+    "Sécurité",
+    "Assemblage",
+    "Bardage",
+    "Montage",
+    "Granit",
+    "Pierre",
+    "Pavage",
+    "Dallage"
 ];
 
 export interface WorksiteInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
