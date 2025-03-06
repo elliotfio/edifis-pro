@@ -1,17 +1,20 @@
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Mail, Phone, User } from 'lucide-react';
+import { SelectInput } from '@/components/ui/SelectInput';
+import { Mail, User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { WORKSITE_SPECIALITIES } from '@/types/worksiteType';
+import { useEffect } from 'react';
 
 const personalInfoSchema = z.object({
     firstName: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
     lastName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
     email: z.string().email('Email invalide'),
-    phone: z.string().min(10, 'Numéro de téléphone invalide'),
-    specializations: z.array(z.string()),
+    roleInfo: z.object({
+        specialites: z.array(z.string()).optional(),
+    }).optional(),
 });
 
 type PersonalInfoFormData = z.infer<typeof personalInfoSchema>;
@@ -20,7 +23,15 @@ interface EditInformationsProps {
     isOpen: boolean;
     onClose: () => void;
     onEdit: (data: PersonalInfoFormData) => void;
-    initialData: PersonalInfoFormData;
+    initialData: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        role: string;
+        roleInfo?: {
+            specialites?: string[];
+        };
+    };
 }
 
 const specializationOptions = WORKSITE_SPECIALITIES.map((speciality) => ({
@@ -35,34 +46,61 @@ export default function EditInformations({ isOpen, onClose, onEdit, initialData 
         formState: { errors },
         setValue,
         watch,
+        reset,
     } = useForm<PersonalInfoFormData>({
         resolver: zodResolver(personalInfoSchema),
         defaultValues: {
-            ...initialData,
-            specializations: initialData.specializations || [],
+            firstName: initialData.firstName,
+            lastName: initialData.lastName,
+            email: initialData.email,
+            roleInfo: {
+                specialites: initialData.roleInfo?.specialites || [],
+            },
         },
     });
 
-    const selectedSpecializations = watch('specializations');
+    // Reset form when modal is opened with new initialData
+    useEffect(() => {
+        if (isOpen) {
+            reset({
+                firstName: initialData.firstName,
+                lastName: initialData.lastName,
+                email: initialData.email,
+                roleInfo: {
+                    specialites: initialData.roleInfo?.specialites || [],
+                },
+            });
+        }
+    }, [isOpen, initialData, reset]);
 
-    const handleSpecializationSelect = (value: string) => {
-        const currentSpecializations = selectedSpecializations || [];
+    const selectedSpecializations = watch('roleInfo.specialites') || [];
+
+    const handleSpecializationChange = (value: string) => {
+        const currentSpecializations = selectedSpecializations;
         let newSpecializations;
 
         if (currentSpecializations.includes(value)) {
-            // Si la spécialisation est déjà sélectionnée, on la retire
             newSpecializations = currentSpecializations.filter((s) => s !== value);
         } else {
-            // Sinon, on l'ajoute
             newSpecializations = [...currentSpecializations, value];
         }
 
-        setValue('specializations', newSpecializations, { shouldValidate: true });
+        setValue('roleInfo.specialites', newSpecializations, { shouldValidate: true });
     };
 
     const onSubmit = async (data: PersonalInfoFormData) => {
         try {
-            await onEdit(data);
+            console.log('Form data before submission:', data); // Debug log
+            const submissionData = {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                email: data.email,
+                roleInfo: {
+                    specialites: data.roleInfo?.specialites || [],
+                }
+            };
+            console.log('Data being submitted:', submissionData); // Debug log
+            await onEdit(submissionData);
             onClose();
         } catch (error) {
             console.error('Erreur lors de la modification des informations:', error);
@@ -112,36 +150,19 @@ export default function EditInformations({ isOpen, onClose, onEdit, initialData 
                             {...register('email')}
                         />
 
-                        <Input
-                            label="Téléphone"
-                            placeholder="0123456789"
-                            error={errors.phone?.message}
-                            rightIcon={<Phone size={20} />}
-                            {...register('phone')}
-                        />
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium">Spécialisations</label>
-                            <div className="flex flex-wrap gap-2">
-                                {specializationOptions.map((option) => (
-                                    <button
-                                        key={option.value}
-                                        type="button"
-                                        onClick={() => handleSpecializationSelect(option.value)}
-                                        className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                                            selectedSpecializations?.includes(option.value)
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
-                                    >
-                                        {option.label}
-                                    </button>
-                                ))}
-                            </div>
-                            {errors.specializations?.message && (
-                                <p className="text-sm text-red-500 mt-1">{errors.specializations.message}</p>
-                            )}
-                        </div>
+                        {initialData.role === 'artisan' && (
+                            <SelectInput
+                                label="Spécialisations"
+                                name="specialites"
+                                options={WORKSITE_SPECIALITIES.map(speciality => ({
+                                    label: speciality,
+                                    value: speciality,
+                                }))}
+                                value={selectedSpecializations}
+                                onChange={handleSpecializationChange}
+                                error={errors.roleInfo?.specialites?.message}
+                            />
+                        )}
 
                         <div className="flex justify-end gap-3 mt-6">
                             <Button variant="secondary" onClick={onClose}>
