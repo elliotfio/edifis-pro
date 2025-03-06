@@ -1,10 +1,8 @@
 const bcrypt = require('bcryptjs');
 
-async function generateHash() {
-  const password = '1234';
+async function generateHash(password) {
   const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-  console.log('Hachage généré :', hashedPassword);
+  return await bcrypt.hash(password, salt);
 }
 
-generateHash();
+module.exports = generateHash;
