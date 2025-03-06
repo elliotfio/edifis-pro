@@ -85,7 +85,7 @@ Ensuite, importez le schéma de la base de données :
 # Importer le schéma de la base de données
 mysql -u hackathon -p edifis < chemin/vers/edifis_pro.sql
 # Par exemple:
-mysql -u hackathon -p edifis < C:\Users\telli\Desktop\dev\edifis-pro\edifis_pro.sql
+mysql -u hackathon -p edifis < C:\chemin\vers\edifis-pro\edifis_pro.sql
 ```
 
 ### Configuration de la base de données
