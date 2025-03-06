@@ -6,6 +6,7 @@ export const artisanSchema = z.object({
     email: z.string().email("Email invalide").endsWith("@edifis.fr", "L'email doit se terminer par @edifis.fr"),
     specialites: z.array(z.string()).min(1, "Sélectionnez au moins une spécialité"),
     years_experience: z.number().optional(),
+    password: z.string().optional(),
 });
 
 export type ArtisanFormData = z.infer<typeof artisanSchema>;

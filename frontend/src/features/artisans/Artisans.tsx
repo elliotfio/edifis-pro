@@ -1,14 +1,13 @@
+import { Button } from '@/components/ui/Button';
 import Searchbar from '@/components/ui/Searchbar';
-import mockData from '@/mocks/userMock.json';
 import { ArtisanFormData, ArtisanUser, ChefUser } from '@/types/userType';
 import { AnimatePresence, motion } from 'framer-motion';
 import { HardHat, Pickaxe, Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AddArtisan from './components/AddArtisan';
 import ArtisansList from './components/ArtisansList';
 import ChefsList from './components/ChefsList';
 import EditArtisan from './components/EditArtisan';
-import { Button } from '@/components/ui/Button';
 
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -28,22 +27,89 @@ export default function Artisans() {
     const [sortColumn, setSortColumn] = useState<string>('nom');
     const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
     const [searchQuery, setSearchQuery] = useState('');
-    const [artisans, setArtisans] = useState(
-        mockData.artisans.map((artisan) => ({
-            ...artisan,
-            user: mockData.users.find((user) => user.id === artisan.user_id)!,
-            all_worksites: artisan.history_worksite.length + (artisan.current_worksite ? 1 : 0),
-        }))
-    );
-    const [chefs, setChefs] = useState(
-        mockData.chefs.map((chef) => ({
-            ...chef,
-            user: mockData.users.find((user) => user.id === chef.user_id)!,
-        }))
-    );
+    const [artisans, setArtisans] = useState<ArtisanUser[]>([]);
+    const [chefs, setChefs] = useState<ChefUser[]>([]);
     const [deleteModalUser, setDeleteModalUser] = useState<UserWithRole | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<ArtisanUser | ChefUser | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchAllData = async () => {
+            setIsLoading(true);
+            try {
+                const [artisansResponse, chefsResponse] = await Promise.all([
+                    fetch('http://localhost:3000/api/artisans'),
+                    fetch('http://localhost:3000/api/chefs')
+                ]);
+
+                if (!artisansResponse.ok || !chefsResponse.ok) {
+                    throw new Error('Erreur lors de la récupération des données');
+                }
+
+                const [artisansData, chefsData] = await Promise.all([
+                    artisansResponse.json(),
+                    chefsResponse.json()
+                ]);
+
+                // Transformer les données des artisans
+                const formattedArtisans = artisansData.map((item: any) => ({
+                    user: {
+                        id: item.user_id,
+                        firstName: item.firstName,
+                        lastName: item.lastName,
+                        email: item.email,
+                        role: item.role,
+                        date_creation: item.date_creation
+                    },
+                    user_id: item.user_id,
+                    disponible: item.disponible,
+                    specialites: Array.isArray(item.specialites) 
+                        ? item.specialites 
+                        : (item.specialites ? item.specialites.split(',') : []),
+                    note_moyenne: item.note_moyenne,
+                    current_worksite: item.current_worksite,
+                    history_worksite: item.history_worksite || [],
+                    all_worksites: Array.isArray(item.history_worksite) 
+                        ? item.history_worksite.length + (item.current_worksite ? 1 : 0)
+                        : 0
+                }));
+
+                // Transformer les données des chefs
+                const formattedChefs = chefsData.map((item: any) => ({
+                    user: {
+                        id: item.user_id,
+                        firstName: item.firstName,
+                        lastName: item.lastName,
+                        email: item.email,
+                        role: item.role,
+                        date_creation: item.date_creation
+                    },
+                    user_id: item.user_id,
+                    disponible: item.disponible,
+                    specialites: ['Chef de chantier'],
+                    years_experience: item.years_experience,
+                    note_moyenne: item.note_moyenne,
+                    current_worksite: item.current_worksite,
+                    history_worksite: item.history_worksite || [],
+                    all_worksites: Array.isArray(item.history_worksite) 
+                        ? item.history_worksite.length + (item.current_worksite ? 1 : 0)
+                        : 0
+                }));
+
+                setArtisans(formattedArtisans);
+                setChefs(formattedChefs);
+            } catch (err) {
+                console.error('Erreur:', err);
+                setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAllData();
+    }, []);
 
     const handleSearch = (value: string) => {
         setSearchQuery(value);
@@ -63,123 +129,180 @@ export default function Artisans() {
     };
 
     const handleAdd = async (data: ArtisanFormData) => {
-        // Vérifier si l'email existe déjà
-        const emailExists = mockData.users.some((user) => user.email === data.email);
-        if (emailExists) {
-            throw new Error('Cette adresse email est déjà utilisée');
+        try {
+            const endpoint = view === 'artisans' 
+                ? 'http://localhost:3000/api/artisans'
+                : 'http://localhost:3000/api/chefs';
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    email: data.email,
+                    password: `${data.lastName}.${data.firstName}`,
+                    specialites: view === 'artisans' ? data.specialites : undefined,
+                    years_experience: view === 'chefs' ? data.years_experience : undefined
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Erreur lors de la création ${view === 'artisans' ? "de l'artisan" : 'du chef'}`);
+            }
+
+            const result = await response.json();
+            
+            const newUser = {
+                user: {
+                    id: result[view === 'artisans' ? 'artisan' : 'chef'].user_id,
+                    firstName: result[view === 'artisans' ? 'artisan' : 'chef'].firstName,
+                    lastName: result[view === 'artisans' ? 'artisan' : 'chef'].lastName,
+                    email: result[view === 'artisans' ? 'artisan' : 'chef'].email,
+                    role: result[view === 'artisans' ? 'artisan' : 'chef'].role,
+                    date_creation: result[view === 'artisans' ? 'artisan' : 'chef'].date_creation,
+                },
+                user_id: result[view === 'artisans' ? 'artisan' : 'chef'].user_id,
+                disponible: result[view === 'artisans' ? 'artisan' : 'chef'].disponible,
+                specialites: view === 'artisans' 
+                    ? result.artisan.specialites
+                    : ['Chef de chantier'],
+                years_experience: view === 'chefs' ? result.chef.years_experience : undefined,
+                note_moyenne: result[view === 'artisans' ? 'artisan' : 'chef'].note_moyenne,
+                current_worksite: result[view === 'artisans' ? 'artisan' : 'chef'].current_worksite,
+                history_worksite: result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite || [],
+                all_worksites: Array.isArray(result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite) 
+                    ? result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite.length + 
+                      (result[view === 'artisans' ? 'artisan' : 'chef'].current_worksite ? 1 : 0)
+                    : 0
+            };
+
+            if (view === 'artisans') {
+                setArtisans(prev => [...prev, newUser]);
+            } else {
+                setChefs(prev => [...prev, newUser]);
+            }
+            setIsAddModalOpen(false);
+
+        } catch (error) {
+            console.error('Erreur:', error);
+            throw error;
         }
-
-        const baseUser = {
-            user: {
-                id: mockData.users.length + 1,
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email,
-                password: 'password',
-                role: view === 'artisans' ? 'artisan' : 'chef',
-                date_creation: new Date().toISOString().split('T')[0],
-            },
-            user_id: mockData.users.length + 1,
-            disponible: true,
-            specialites: data.specialites || [],
-            current_worksite: '',
-            history_worksite: [],
-        };
-
-        const newUser =
-            view === 'artisans'
-                ? {
-                      ...baseUser,
-                      note_moyenne: 0,
-                      all_worksites: 0,
-                  }
-                : {
-                      ...baseUser,
-                      note_moyenne: 0,
-                      years_experience: data.years_experience || 0,
-                      current_worksite: 0,
-                      chantiers_termines: 0,
-                  };
-
-        console.log(newUser);
-
-        if (view === 'artisans') {
-            setArtisans((prev) => [...prev, newUser as any]);
-        } else {
-            setChefs((prev) => [...prev, newUser as any]);
-        }
-        setIsAddModalOpen(false);
     };
 
     const handleEdit = async (formData: ArtisanFormData) => {
         if (!editingUser) return;
 
         // Vérifier si l'email existe déjà (sauf pour l'utilisateur en cours d'édition)
-        const emailExists = mockData.users.some(
-            (user) => user.email === formData.email && user.id !== editingUser.user.id
-        );
+        const emailExists = view === 'artisans' 
+            ? artisans.some(user => user.user.email === formData.email && user.user.id !== editingUser.user.id)
+            : chefs.some(user => user.user.email === formData.email && user.user.id !== editingUser.user.id);
+
         if (emailExists) {
             throw new Error('Cette adresse email est déjà utilisée');
         }
 
-        const updatedUser = {
-            user: {
-                ...editingUser.user,
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                email: formData.email,
-            },
-            user_id: editingUser.user_id,
-            specialites: formData.specialites,
-            disponible: editingUser.disponible,
-            note_moyenne: editingUser.note_moyenne,
-            all_worksites: (editingUser.history_worksite?.length || 0) + (editingUser.current_worksite ? 1 : 0),
-            current_worksite: editingUser.current_worksite,
-            history_worksite: editingUser.history_worksite,
-            ...(view === 'chefs' && {
-                years_experience: (editingUser as ChefUser).years_experience,
-                current_worksite: (editingUser as ChefUser).current_worksite,
-                all_worksites: (editingUser as ChefUser).history_worksite?.length || 0,
-            })
-        };
+        try {
+            const endpoint = view === 'artisans'
+                ? `http://localhost:3000/api/artisans/${editingUser.user_id}`
+                : `http://localhost:3000/api/chefs/${editingUser.user_id}`;
 
-        if (view === 'artisans') {
-            setArtisans((prev) =>
-                prev.map((artisan) =>
-                    artisan.user_id === editingUser.user_id
-                        ? { ...artisan, ...updatedUser as any }
-                        : artisan
-                )
-            );
-        } else {
-            setChefs((prev) =>
-                prev.map((chef) =>
-                    chef.user_id === editingUser.user_id
-                        ? { ...chef, ...updatedUser } as any 
-                        : chef
-                )
-            );
+            const response = await fetch(endpoint, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    password: formData.password,
+                    specialites: view === 'artisans' ? formData.specialites : undefined,
+                    years_experience: view === 'chefs' ? formData.years_experience : undefined
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Erreur lors de la mise à jour ${view === 'artisans' ? "de l'artisan" : 'du chef'}`);
+            }
+
+            const result = await response.json();
+            
+            const updatedUser = {
+                user: {
+                    id: result[view === 'artisans' ? 'artisan' : 'chef'].user_id,
+                    firstName: result[view === 'artisans' ? 'artisan' : 'chef'].firstName,
+                    lastName: result[view === 'artisans' ? 'artisan' : 'chef'].lastName,
+                    email: result[view === 'artisans' ? 'artisan' : 'chef'].email,
+                    role: result[view === 'artisans' ? 'artisan' : 'chef'].role,
+                    date_creation: result[view === 'artisans' ? 'artisan' : 'chef'].date_creation,
+                },
+                user_id: result[view === 'artisans' ? 'artisan' : 'chef'].user_id,
+                disponible: result[view === 'artisans' ? 'artisan' : 'chef'].disponible,
+                specialites: view === 'artisans' 
+                    ? result.artisan.specialites
+                    : ['Chef de chantier'],
+                years_experience: view === 'chefs' ? result.chef.years_experience : undefined,
+                note_moyenne: result[view === 'artisans' ? 'artisan' : 'chef'].note_moyenne,
+                current_worksite: result[view === 'artisans' ? 'artisan' : 'chef'].current_worksite,
+                history_worksite: result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite || [],
+                all_worksites: Array.isArray(result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite) 
+                    ? result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite.length + 
+                      (result[view === 'artisans' ? 'artisan' : 'chef'].current_worksite ? 1 : 0)
+                    : 0
+            };
+
+            if (view === 'artisans') {
+                setArtisans(prev => prev.map(item => item.user_id === editingUser.user_id ? updatedUser : item));
+            } else {
+                setChefs(prev => prev.map(item => item.user_id === editingUser.user_id ? updatedUser : item));
+            }
+            setEditingUser(null);
+
+        } catch (error) {
+            console.error('Erreur:', error);
+            throw error;
         }
-
-        setEditingUser(null);
     };
 
     const handleDeleteClick = (user: UserWithRole) => {
         setDeleteModalUser(user);
     };
 
-    const handleDeleteConfirm = () => {
+    const handleDeleteConfirm = async () => {
         if (deleteModalUser) {
-            if (view === 'artisans') {
-                setArtisans((currentArtisans) =>
-                    currentArtisans.filter((artisan) => artisan.user_id !== deleteModalUser.user_id)
-                );
-            } else {
-                setChefs((currentChefs) =>
-                    currentChefs.filter((chef) => chef.user_id !== deleteModalUser.user_id)
-                );
+            try {
+                const endpoint = view === 'artisans' 
+                    ? `http://localhost:3000/api/artisans/${deleteModalUser.user_id}`
+                    : `http://localhost:3000/api/chefs/${deleteModalUser.user_id}`;
+
+                const response = await fetch(endpoint, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Erreur lors de la suppression de ${view === 'artisans' ? "l'artisan" : 'du chef'}`);
+                }
+
+                if (view === 'artisans') {
+                    setArtisans(prev => prev.filter(artisan => artisan.user_id !== deleteModalUser.user_id));
+                } else {
+                    setChefs(prev => prev.filter(chef => chef.user_id !== deleteModalUser.user_id));
+                }
+                setDeleteModalUser(null);
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                throw error;
             }
-            setDeleteModalUser(null);
         }
     };
 
@@ -199,6 +322,14 @@ export default function Artisans() {
         );
     }, [searchQuery, view, artisans, chefs]);
 
+    if (isLoading) {
+        return <div>Chargement...</div>;
+    }
+
+    if (error) {
+        return <div>Erreur: {error}</div>;
+    }
+
     return (
         <div className="p-6">
             <div className="flex items-center gap-4 mb-6">
@@ -212,7 +343,7 @@ export default function Artisans() {
                     <Searchbar onSearch={handleSearch} className="flex-1" />
                     <Button variant="primary" onClick={() => setIsAddModalOpen(true)}>
                         <Plus className="mr-2" size={16} />
-                        Ajouter {view === 'artisans' ? 'un artisan' : 'un chef'}
+                        Ajouter {view === 'artisans' ? "un artisan" : 'un chef'}
                     </Button>
                 </div>
                 <div className="flex p-1 relative">

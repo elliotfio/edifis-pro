@@ -7,11 +7,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { HardHat, Mail, User, UserCog } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { userSchema, UserFormData } from '@/validators/userValidator';
-import axios from 'axios';
 
 interface AddUserProps {
     isOpen: boolean;
     onClose: () => void;
+    onSubmit: (data: UserFormData) => Promise<void>;
 }
 
 const specialityOptions = WORKSITE_SPECIALITIES.map((speciality) => ({
@@ -26,17 +26,7 @@ const roleOptions = [
     { label: 'Administrateur', value: 'admin' },
 ];
 
-const addUser = async (userData: UserFormData) => {
-    try {
-        const response = await axios.post('/api/users', userData);
-        return response.data;
-    } catch (error) {
-        console.error('Erreur lors de l\'ajout de l\'utilisateur:', error);
-        throw error;
-    }
-};
-
-export default function AddUser({ isOpen, onClose }: AddUserProps) {
+export default function AddUser({ isOpen, onClose, onSubmit }: AddUserProps) {
     const {
         register,
         handleSubmit,
@@ -77,10 +67,9 @@ export default function AddUser({ isOpen, onClose }: AddUserProps) {
         }
     };
 
-    const onSubmit = async (data: UserFormData) => {
+    const handleFormSubmit = async (data: UserFormData) => {
         try {
-            const newUser = await addUser(data);
-            console.log('Utilisateur ajouté:', newUser);
+            await onSubmit(data);
             reset();
             onClose();
         } catch (error) {
@@ -108,10 +97,10 @@ export default function AddUser({ isOpen, onClose }: AddUserProps) {
                     </h2>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" onKeyDown={(e) => {
+                <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4" onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        handleSubmit(onSubmit)();
+                        handleSubmit(handleFormSubmit)();
                     }
                 }}>
                     <div className="space-y-4">
