@@ -30,40 +30,6 @@ const generateTokens = (user) => {
     return { access_token, refresh_token };
 };
 
-router.post('/register', async (req, res) => {
-    const { firstName, lastName, email, password, role } = req.body;
-
-    console.log("Données reçues :", req.body); // Ajout de log
-
-    if (!password) {
-        return res.status(400).json({ message: "Le mot de passe est requis" });
-    }
-
-    try {
-        const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-        if (rows.length > 0) return res.status(400).json({ message: 'Email déjà utilisé' });
-
-        const hashedPassword = await bcrypt.hash(password, 10); // Ici, on est sûr que password est défini
-
-        const userRole = role === 'admin' ? 'admin' : 'employe';
-        const [result] = await pool.query(
-            'INSERT INTO users (firstName, lastName, email, password, role) VALUES (?, ?, ?, ?, ?)',
-            [firstName, lastName, email, hashedPassword, userRole]
-        );
-
-        const newUser = { id: result.insertId, firstName, lastName, email, role: userRole };
-        const tokens = generateTokens(newUser);
-
-        res.status(201).json({ ...tokens, user: newUser });
-
-    } catch (err) {
-        console.error('Erreur lors de l’enregistrement :', err);
-        res.status(500).json({ message: 'Erreur serveur, veuillez réessayer plus tard' });
-    }
-});
-
-
-
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
