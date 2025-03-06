@@ -50,4 +50,31 @@ router.get('/:user_id', async (req, res) => {
     }
 });
 
+// DELETE artisan by user_id
+router.delete('/:user_id', async (req, res) => {
+    const userId = req.params.user_id;
+    try {
+        // Supprimer l'artisan
+        const [artisanResult] = await pool.query('DELETE FROM artisan WHERE user_id = ?', [userId]);
+
+        // Vérifiez si l'artisan a été supprimé
+        if (artisanResult.affectedRows === 0) {
+            return res.status(404).json({ message: 'Artisan non trouvé' });
+        }
+
+        // Supprimer l'utilisateur
+        const [userResult] = await pool.query('DELETE FROM users WHERE id = ?', [userId]);
+
+        // Vérifiez si l'utilisateur a été supprimé
+        if (userResult.affectedRows === 0) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        res.json({ message: 'Artisan et utilisateur supprimés avec succès' });
+    } catch (err) {
+        console.error("❌ Erreur lors de la suppression de l'artisan:", err);
+        res.status(500).json({ message: 'Erreur serveur', error: err });
+    }
+});
+
 module.exports = router;

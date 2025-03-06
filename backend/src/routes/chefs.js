@@ -62,4 +62,21 @@ router.get('/:user_id', async (req, res) => {
     }
 });
 
+// DELETE chef by user_id
+router.delete('/:user_id', async (req, res) => {
+    const userId = req.params.user_id;
+    try {
+        // Supprimer le chef
+        await pool.query('DELETE FROM chef WHERE user_id = ?', [userId]);
+
+        // Supprimer l'utilisateur
+        await pool.query('DELETE FROM users WHERE id = ?', [userId]);
+
+        res.json({ message: 'Chef et utilisateur supprimés avec succès' });
+    } catch (err) {
+        console.error("❌ Erreur lors de la suppression du chef:", err);
+        res.status(500).json({ message: 'Erreur serveur', error: err });
+    }
+});
+
 module.exports = router;

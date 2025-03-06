@@ -42,11 +42,17 @@ pool.getConnection()
 
 // Routes
 const authRoutes = require('./src/routes/auth'); 
-const adminRoutes = require('./src/routes/adminRoutes');
+const userRoutes = require('./src/routes/users');
+const chefRoutes = require('./src/routes/chefs');
+const artisanRoutes = require('./src/routes/artisans');
+const affectationRoutes = require('./src/routes/affectationRoutes');
 
-
+// Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/chefs', chefRoutes);
+app.use('/api/artisans', artisanRoutes);
+app.use('/api/affectations', affectationRoutes);
 
 // Route de base
 app.get('/', (req, res) => {
@@ -62,7 +68,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Démarrage du serveur
+// serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Serveur démarré sur le port ${PORT}`);

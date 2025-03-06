@@ -1,7 +1,9 @@
+const express = require('express');
+const router = express.Router();
 const pool = require('../config/db');
 
 //recup les affection 
-const getAffectationsByChantier = async (req, res) => {
+router.get('/:chantier_id', async (req, res) => {
     const chantier_id = req.params.chantier_id;
 
     try {
@@ -10,4 +12,6 @@ const getAffectationsByChantier = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Erreur serveur', error });
     }
-};
+});
+
+module.exports = router;
