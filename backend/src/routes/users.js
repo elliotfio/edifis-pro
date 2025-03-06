@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../config/db");
-const generateHash = require("../../generateHash");
+const pool = require('../config/db');
+const generateHash = require('../../generateHash');
+const bcrypt = require('bcrypt');
+
 
 // Error handler middleware
 const handleError = (err, res) => {
@@ -15,10 +17,11 @@ const handleError = (err, res) => {
 
 // Validate role middleware
 const validateRole = (role) => {
-  const validRoles = ["artisan", "chef", "employe"];
-  if (!role || !validRoles.includes(role.toLowerCase())) {
-    throw new Error("Role invalide");
-  }
+
+    const validRoles = ['artisan', 'chef', 'employe', 'admin'];
+    if (!role || !validRoles.includes(role.toLowerCase())) {
+        throw new Error('Role invalide');
+    }
 };
 
 // GET all users
@@ -289,6 +292,37 @@ router.put("/:id", async (req, res) => {
   } finally {
     connection.release();
   }
+});
+
+// Route pour mettre à jour le mot de passe
+router.put('/:id/password', async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.params.id;
+
+        // Vérifier que l'utilisateur existe
+        const [[user]] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        // Vérifier que l'ancien mot de passe est correct
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Mot de passe actuel incorrect' });
+        }
+
+        // Hasher le nouveau mot de passe
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Mettre à jour le mot de passe
+        await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+
+        res.json({ message: 'Mot de passe mis à jour avec succès' });
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour du mot de passe:', error);
+        res.status(500).json({ message: 'Erreur lors de la mise à jour du mot de passe' });
+    }
 });
 
 // DELETE user
