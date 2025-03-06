@@ -91,8 +91,6 @@ export function AddressInput({ label, error, value, onChange, disabled }: Addres
     }, []);
 
     const formatAddress = (location: Location): string => {
-        console.log('Location data:', location); // Debug log
-
         // Extraire les informations pertinentes de l'objet location
         const {
             address_line2,
@@ -133,8 +131,7 @@ export function AddressInput({ label, error, value, onChange, disabled }: Addres
             ? addressParts.join(', ')
             : location.display_name;
 
-        console.log('Formatted address:', formattedAddress); // Debug log
-        return formattedAddress;
+            return formattedAddress;
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

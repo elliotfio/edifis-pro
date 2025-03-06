@@ -35,8 +35,6 @@ export default function Sidebar() {
         logout();
     };
 
-    console.log(user)
-
     const mainSections: SidebarSection[] = [
         {
             title: 'LISTES',

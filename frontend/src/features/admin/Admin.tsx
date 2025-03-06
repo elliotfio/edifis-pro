@@ -130,11 +130,6 @@ export default function Admin() {
         if (!editingUser) return;
 
         try {
-            console.log('Sending data:', {
-                ...data,
-                oldRole: editingUser.user.role,
-            });
-
             const response = await fetch(`http://localhost:3000/api/users/${editingUser.user.id}`, {
                 method: 'PUT',
                 headers: {
@@ -168,7 +163,6 @@ export default function Admin() {
                             specialites: data.role === 'artisan' ? data.specialites || [] : [],
                             years_experience: data.role === 'chef' ? data.years_experience || 0 : undefined,
                         };
-                        console.log('Updated user:', updatedUser);
                         return updatedUser;
                     }
                     return user;
