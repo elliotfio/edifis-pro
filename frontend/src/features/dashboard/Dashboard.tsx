@@ -39,7 +39,7 @@ const Dashboard = () => {
             try {
                 const [worksitesResponse, usersResponse] = await Promise.all([
                     fetch('http://localhost:3000/api/worksites'),
-                    fetch('http://localhost:3000/api/users')
+                    fetch('http://localhost:3000/api/users'),
                 ]);
 
                 if (!worksitesResponse.ok || !usersResponse.ok) {
@@ -48,7 +48,7 @@ const Dashboard = () => {
 
                 const [worksitesData, usersData] = await Promise.all([
                     worksitesResponse.json(),
-                    usersResponse.json()
+                    usersResponse.json(),
                 ]);
 
                 setWorksites(worksitesData);
@@ -68,23 +68,29 @@ const Dashboard = () => {
     const inProgressWorksites = worksites.filter((w) => w.status === 'in_progress').length;
     const completedWorksites = worksites.filter((w) => w.status === 'completed').length;
 
-    const activeWorksites = worksites.filter(w => w.status === 'in_progress' || w.status === 'completed');
-    const totalRevenue = Number(activeWorksites.reduce((sum, worksite) => sum + Number(worksite.budget), 0)).toFixed(2);
-    const totalCosts = Number(activeWorksites.reduce((sum, worksite) => sum + Number(worksite.cost), 0)).toFixed(2);
+    const activeWorksites = worksites.filter(
+        (w) => w.status === 'in_progress' || w.status === 'completed'
+    );
+    const totalRevenue = Number(
+        activeWorksites.reduce((sum, worksite) => sum + Number(worksite.budget), 0)
+    ).toFixed(2);
+    const totalCosts = Number(
+        activeWorksites.reduce((sum, worksite) => sum + Number(worksite.cost), 0)
+    ).toFixed(2);
     const profit = (Number(totalRevenue) - Number(totalCosts)).toFixed(2);
 
     // Calculer les statistiques des employés par rôle
     const roleStats = {
-        artisan: users.filter(user => user.role === 'artisan').length,
-        chef: users.filter(user => user.role === 'chef').length,
-        employe: users.filter(user => user.role === 'employe').length
+        artisan: users.filter((user) => user.role === 'artisan').length,
+        chef: users.filter((user) => user.role === 'chef').length,
+        employe: users.filter((user) => user.role === 'employe').length,
     };
 
     // Données pour le graphique circulaire
     const employeeData = [
         { name: 'Artisan', value: roleStats.artisan, icon: Pickaxe },
         { name: 'Chef de chantier', value: roleStats.chef, icon: HardHat },
-        { name: 'Employé administratif', value: roleStats.employe, icon: User2 }
+        { name: 'Employé administratif', value: roleStats.employe, icon: User2 },
     ];
 
     // Données pour le graphique d'évolution
@@ -229,7 +235,9 @@ const Dashboard = () => {
                                                 (sum, item) => sum + item.value,
                                                 0
                                             );
-                                            const percentage = ((data.value / total) * 100).toFixed(1);
+                                            const percentage = ((data.value / total) * 100).toFixed(
+                                                1
+                                            );
 
                                             const getIcon = (name: string) => {
                                                 switch (name) {
@@ -339,7 +347,11 @@ const Dashboard = () => {
                     </div>
                     <div className="flex gap-2 items-end">
                         <div className="text-6xl font-bold my-2">
-                            {totalRevenue.toLocaleString()}€
+                            {new Intl.NumberFormat('fr-FR', {
+                                maximumFractionDigits: 2,
+                                minimumFractionDigits: 2,
+                            }).format(Number(totalRevenue))}
+                            €
                         </div>
                         <div className="text-xs text-gray-600 mb-4">Depuis le 1er Janvier</div>
                     </div>
@@ -356,7 +368,13 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <div className="flex gap-2 items-end">
-                        <div className="text-6xl font-bold my-2">{profit.toLocaleString()}€</div>
+                        <div className="text-6xl font-bold my-2">
+                            {new Intl.NumberFormat('fr-FR', {
+                                maximumFractionDigits: 2,
+                                minimumFractionDigits: 2,
+                            }).format(Number(profit))}
+                            €
+                        </div>
                         <div className="text-xs text-gray-600 mb-4">Depuis le 1er Janvier</div>
                     </div>
                 </div>
