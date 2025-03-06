@@ -147,13 +147,44 @@ Pour créer un nouveau compte utilisateur, cliquez sur "S'inscrire" et suivez le
 
 ### Fonctionnalités principales
 
-- 🔐 Authentification complète (Login/Register)
-- 🛣️ Système de routage avec routes protégées
-- 🎨 Interface utilisateur responsive avec TailwindCSS
-- 📡 Gestion des requêtes API avec React Query
-- 🔄 Gestion de l'état global avec Zustand
-- ✨ Composants UI réutilisables et animés
+#### Interface utilisateur
+- 🎨 Interface utilisateur responsive et moderne avec TailwindCSS
+- ✨ Composants UI réutilisables avec animations fluides
+- 📱 Adaptation complète aux appareils mobiles, tablettes et ordinateurs
+
+#### Architecture technique
+- 🔐 Système d'authentification complet avec gestion des rôles et permissions
+- 🛣️ Routage avancé avec routes protégées selon les profils utilisateurs
+- 📡 Communication API optimisée avec React Query (mise en cache, revalidation)
+- 🔄 Gestion d'état global efficace avec Zustand
+- 🧪 Tests automatisés pour garantir la fiabilité du code
+
+#### Fonctionnalités métier
+- 📋 Gestion complète des chantiers (création, suivi, clôture)
+- 👷 Administration des équipes et attribution des ressources
+- 📊 Tableaux de bord personnalisés selon les profils utilisateurs
+- 📝 Suivi des tâches et des interventions en temps réel
+- 📅 Planification des interventions avec calendrier interactif
+- 💰 Suivi budgétaire et facturation
+- 📈 Rapports et statistiques détaillés
+
+#### Sécurité et conformité
+- 🔒 Protection des données sensibles (RGPD)
+- 🛡️ Authentification sécurisée avec JWT
+
+## Description du projet
+
+EDIFIS est une solution complète de gestion pour les entreprises du BTP, conçue pour simplifier et optimiser tous les aspects de la gestion de chantiers. Notre plateforme permet aux artisans, chefs de chantier et personnel administratif de collaborer efficacement sur un même outil.
+
+### Vision
+
+Notre vision est de digitaliser le secteur du BTP en proposant une solution intuitive qui répond aux besoins spécifiques des différents acteurs du secteur. EDIFIS vise à réduire la charge administrative, optimiser la planification des ressources et améliorer la communication entre les équipes sur le terrain et au bureau.
+
+### Public cible
+
+- **Artisans** : Suivi des interventions, rapports de chantier, gestion du temps
+- **Chefs de chantier** : Planification, attribution des tâches, suivi d'avancement
+- **Personnel administratif** : Facturation, gestion des clients, reporting
+- **Direction** : Vue d'ensemble, KPIs, analyse de rentabilité
 
 ---
-
-Pour toute question ou problème, veuillez consulter la documentation dans le dossier `docs/` ou ouvrir une issue sur notre dépôt GitHub.
