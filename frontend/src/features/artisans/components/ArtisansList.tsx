@@ -95,14 +95,30 @@ export default function ArtisansList({
                                 {formatDateToDDMMYYYY(artisan.user.date_creation)}
                             </TableCell>
                             <TableCell>
-                                {artisan.specialites[0]?.charAt(0).toUpperCase() +
-                                    artisan.specialites[0]?.slice(1)}
-                                {artisan.specialites.length > 1 && (
+                                {artisan.specialites && artisan.specialites.length > 0 ? (
                                     <>
-                                        {', '}
-                                        {artisan.specialites[1]?.charAt(0).toUpperCase() +
-                                            artisan.specialites[1]?.slice(1)}
+                                        {Array.isArray(artisan.specialites)
+                                            ? artisan.specialites
+                                                  .slice(0, 2) // Limiter à 2 spécialités maximum
+                                                  .map((spec) => {
+                                                      // Nettoyer la chaîne en retirant les guillemets et autres caractères
+                                                      const cleanSpec = spec.replace(
+                                                          /["\[\]]/g,
+                                                          ''
+                                                      );
+                                                      return (
+                                                          cleanSpec.charAt(0).toUpperCase() +
+                                                          cleanSpec.slice(1)
+                                                      );
+                                                  })
+                                                  .join(', ')
+                                            : JSON.stringify(artisan.specialites).replace(
+                                                  /["\[\]]/g,
+                                                  ''
+                                              )}
                                     </>
+                                ) : (
+                                    '-'
                                 )}
                             </TableCell>
                             <TableCell>

@@ -85,13 +85,15 @@ export default function UserShow() {
                     lastName: userData.lastName,
                     email: userData.email,
                     role: userData.role,
-                    date_creation: userData.date_creation
+                    date_creation: userData.date_creation,
                 };
                 setUser(formattedUser);
 
                 // Si c'est un artisan ou un chef, récupérer ses données spécifiques
                 if (userData.role === 'artisan') {
-                    const artisanResponse = await fetch(`http://localhost:3000/api/artisans/${userData.id}`);
+                    const artisanResponse = await fetch(
+                        `http://localhost:3000/api/artisans/${userData.id}`
+                    );
                     if (!artisanResponse.ok) {
                         throw new Error('Erreur lors de la récupération des données artisan');
                     }
@@ -102,10 +104,12 @@ export default function UserShow() {
                         disponible: artisanData.disponible || false,
                         note_moyenne: artisanData.note_moyenne || 0,
                         current_worksite: artisanData.current_worksite || null,
-                        history_worksite: artisanData.history_worksite || []
+                        history_worksite: artisanData.history_worksite || [],
                     });
                 } else if (userData.role === 'chef') {
-                    const chefResponse = await fetch(`http://localhost:3000/api/chefs/${userData.id}`);
+                    const chefResponse = await fetch(
+                        `http://localhost:3000/api/chefs/${userData.id}`
+                    );
                     if (!chefResponse.ok) {
                         throw new Error('Erreur lors de la récupération des données chef');
                     }
@@ -117,7 +121,7 @@ export default function UserShow() {
                         note_moyenne: 0,
                         current_worksite: chefData.current_worksite || null,
                         history_worksite: chefData.history_worksite || [],
-                        years_experience: chefData.years_experience || 'Junior'
+                        years_experience: chefData.years_experience || 'Junior',
                     });
                 }
             } catch (error) {
@@ -144,9 +148,12 @@ export default function UserShow() {
     const currentArtisanData = user.role === 'artisan' || user.role === 'chef' ? artisanData : null;
 
     // Find current worksite data if exists
-    const currentWorksite = currentArtisanData && currentArtisanData.current_worksite
-        ? (worksiteMockData.worksites as unknown as Worksite[]).find(w => w.id === currentArtisanData.current_worksite)
-        : null;
+    const currentWorksite =
+        currentArtisanData && currentArtisanData.current_worksite
+            ? (worksiteMockData.worksites as unknown as Worksite[]).find(
+                  (w) => w.id === currentArtisanData.current_worksite
+              )
+            : null;
 
     return (
         <div className="container mx-auto p-6">
@@ -161,12 +168,15 @@ export default function UserShow() {
                         {user.firstName} {user.lastName}
                     </h1>
                     <div
-                        className={`px-3 py-1 rounded-full text-sm ${currentArtisanData && currentArtisanData.disponible
+                        className={`px-3 py-1 rounded-full text-sm ${
+                            currentArtisanData && currentArtisanData.disponible
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
-                            }`}
+                        }`}
                     >
-                        {currentArtisanData && currentArtisanData.disponible ? 'Disponible' : 'Indisponible'}
+                        {currentArtisanData && currentArtisanData.disponible
+                            ? 'Disponible'
+                            : 'Indisponible'}
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
                         <HardHat size={16} />
@@ -207,15 +217,28 @@ export default function UserShow() {
                         <h2 className="font-medium">Spécialités</h2>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {currentArtisanData?.specialites?.[0] !== null && currentArtisanData?.specialites?.length! > 0 ? (
-                            currentArtisanData?.specialites.map((specialite) => (
-                                <span
-                                    key={specialite}
-                                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                                >
-                                    {specialite}
+                        {currentArtisanData?.specialites &&
+                        currentArtisanData?.specialites.length > 0 ? (
+                            Array.isArray(currentArtisanData.specialites) ? (
+                                currentArtisanData.specialites.map((specialite) => {
+                                    const cleanSpec = specialite.replace(/["\[\]]/g, '');
+                                    return (
+                                        <span
+                                            key={cleanSpec}
+                                            className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                                        >
+                                            {cleanSpec.charAt(0).toUpperCase() + cleanSpec.slice(1)}
+                                        </span>
+                                    );
+                                })
+                            ) : (
+                                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                                    {JSON.stringify(currentArtisanData.specialites).replace(
+                                        /["\[\]]/g,
+                                        ''
+                                    )}
                                 </span>
-                            ))
+                            )
                         ) : (
                             <span className="text-gray-600">Non renseigné</span>
                         )}
@@ -234,13 +257,17 @@ export default function UserShow() {
                                     <div className="text-sm text-gray-600">Note moyenne</div>
                                     <div className="text-2xl font-bold flex items-center gap-1">
                                         {currentArtisanData && currentArtisanData.note_moyenne}
-                                        <Star size={20} className="text-yellow-200 fill-yellow-200" />
+                                        <Star
+                                            size={20}
+                                            className="text-yellow-200 fill-yellow-200"
+                                        />
                                     </div>
                                 </div>
                                 <div>
                                     <div className="text-sm text-gray-600">Chantiers terminés</div>
                                     <div className="text-2xl font-bold">
-                                        {currentArtisanData && currentArtisanData.history_worksite.length}
+                                        {currentArtisanData &&
+                                            currentArtisanData.history_worksite.length}
                                     </div>
                                 </div>
                             </>
@@ -249,13 +276,15 @@ export default function UserShow() {
                                 <div>
                                     <div className="text-sm text-gray-600">Niveau d'expérience</div>
                                     <div className="text-2xl font-bold">
-                                        {currentArtisanData?.years_experience || 'Non renseigné'} ans
+                                        {currentArtisanData?.years_experience || 'Non renseigné'}{' '}
+                                        ans
                                     </div>
                                 </div>
                                 <div>
                                     <div className="text-sm text-gray-600">Chantiers terminés</div>
                                     <div className="text-2xl font-bold">
-                                        {currentArtisanData && currentArtisanData.history_worksite.length}
+                                        {currentArtisanData &&
+                                            currentArtisanData.history_worksite.length}
                                     </div>
                                 </div>
                             </>
@@ -278,9 +307,7 @@ export default function UserShow() {
                         </div>
                         <div className="flex items-start gap-2">
                             <MapPin size={16} className="text-primary flex-shrink-0" />
-                            <span className="text-gray-600 text-sm">
-                                {currentWorksite.address}
-                            </span>
+                            <span className="text-gray-600 text-sm">{currentWorksite.address}</span>
                         </div>
                         <div className="h-[300px] w-full rounded-lg overflow-hidden">
                             <MapContainer
@@ -300,10 +327,15 @@ export default function UserShow() {
                                             <div className="space-y-3">
                                                 <div className="flex items-center gap-2">
                                                     <Building2 size={16} className="text-primary" />
-                                                    <span className="font-medium">{currentWorksite.name}</span>
+                                                    <span className="font-medium">
+                                                        {currentWorksite.name}
+                                                    </span>
                                                 </div>
                                                 <div className="flex items-start gap-2">
-                                                    <MapPin size={16} className="text-primary flex-shrink-0" />
+                                                    <MapPin
+                                                        size={16}
+                                                        className="text-primary flex-shrink-0"
+                                                    />
                                                     <span className="text-gray-600 text-sm">
                                                         {currentWorksite.address}
                                                     </span>
@@ -312,8 +344,14 @@ export default function UserShow() {
                                                     to={`/worksite/${currentWorksite.id}`}
                                                     className="flex items-center justify-center gap-2 w-full bg-primary py-2 px-4 rounded-md group"
                                                 >
-                                                    <span className="text-white">Voir le chantier</span>
-                                                    <ArrowRight size={16} color='white' className='group-hover:translate-x-1 transition-all duration-300' />
+                                                    <span className="text-white">
+                                                        Voir le chantier
+                                                    </span>
+                                                    <ArrowRight
+                                                        size={16}
+                                                        color="white"
+                                                        className="group-hover:translate-x-1 transition-all duration-300"
+                                                    />
                                                 </Link>
                                             </div>
                                         </div>
@@ -323,9 +361,7 @@ export default function UserShow() {
                         </div>
                     </div>
                 ) : (
-                    <div className="text-gray-600">
-                        Aucun chantier en cours
-                    </div>
+                    <div className="text-gray-600">Aucun chantier en cours</div>
                 )}
             </div>
         </div>

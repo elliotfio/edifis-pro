@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS `artisan` (
 CREATE TABLE IF NOT EXISTS `chef` (
   `user_id` int NOT NULL,
   `years_experience` varchar(50) NOT NULL,
+  `specialites` text NOT NULL,
   `current_worksite` varchar(50) DEFAULT NULL,
   `history_worksite` text,
   PRIMARY KEY (`user_id`),
@@ -183,18 +184,90 @@ INSERT INTO `employe` (`user_id`)
 SELECT id FROM `users` WHERE role = 'employe';
 
 -- 4. Insertion des chefs (en fonction des utilisateurs ayant le rôle 'chef')
-INSERT INTO `chef` (`user_id`, `years_experience`, `current_worksite`, `history_worksite`)
+INSERT INTO `chef` (`user_id`, `years_experience`, `specialites`, `current_worksite`, `history_worksite`)
 SELECT 
     id, 
-    FLOOR(5 + RAND() * 20) AS years_experience, -- Entre 5 et 25 ans d'expérience
+    CONCAT(FLOOR(5 + RAND() * 20), ' ans') AS years_experience,
     CASE 
-        WHEN ROW_NUMBER() OVER () <= 10 THEN -- Un chef par chantier pour les 10 premiers chantiers
-            CONVERT(ROW_NUMBER() OVER (), CHAR(50))
+        WHEN id % 10 = 0 THEN '["Gestion de projet","Coordination","Planification"]'
+        WHEN id % 10 = 1 THEN '["Gestion d\'équipe","Suivi de chantier","Sécurité"]'
+        WHEN id % 10 = 2 THEN '["Planification","Budget","Qualité"]'
+        WHEN id % 10 = 3 THEN '["Coordination","Logistique","Approvisionnement"]'
+        WHEN id % 10 = 4 THEN '["Suivi de chantier","Contrôle qualité","Réception"]'
+        WHEN id % 10 = 5 THEN '["Gestion des risques","Sécurité","Conformité"]'
+        WHEN id % 10 = 6 THEN '["Budget","Coûts","Rentabilité"]'
+        WHEN id % 10 = 7 THEN '["Planification","Délais","Ressources"]'
+        WHEN id % 10 = 8 THEN '["Coordination","Communication","Reporting"]'
+        ELSE '["Management","Organisation","Supervision"]'
+    END AS specialites,
+    CASE 
+        WHEN id % 5 = 0 THEN '1'  -- Chantier 1 (en cours)
+        WHEN id % 5 = 1 THEN '5'  -- Chantier 5 (en cours)
+        WHEN id % 5 = 2 THEN '11' -- Chantier 11 (en cours)
         ELSE NULL 
     END AS current_worksite,
-    CASE 
-        WHEN ROW_NUMBER() OVER () <= 10 THEN -- Historique pour les chefs
-            CONCAT('7,8,', CONVERT(ROW_NUMBER() OVER () + 2, CHAR(50)))
-        ELSE '7,8'
-    END AS history_worksite
+    '["7","8"]' AS history_worksite
 FROM `users`
+WHERE role = 'chef';
+
+-- 5. Insertion des artisans
+INSERT INTO `artisan` (`user_id`, `specialites`, `disponible`, `note_moyenne`, `current_worksite`, `history_worksite`)
+SELECT 
+    id,
+    CASE 
+        WHEN lastName = 'Carpentier' THEN '["Charpente","Menuiserie","Bois"]'
+        WHEN lastName = 'Menuisier' THEN '["Menuiserie","Agencement","Ébénisterie"]'
+        WHEN lastName = 'Plombier' THEN '["Plomberie","Sanitaire","Chauffage"]'
+        WHEN lastName = 'Electricien' THEN '["Électricité","Domotique","Éclairage"]'
+        WHEN lastName = 'Peintre' THEN '["Peinture","Décoration","Revêtements muraux"]'
+        WHEN lastName = 'Maçon' THEN '["Maçonnerie","Gros œuvre","Béton"]'
+        WHEN lastName = 'Carreleur' THEN '["Carrelage","Faïence","Mosaïque"]'
+        WHEN lastName = 'Couvreur' THEN '["Couverture","Toiture","Zinguerie"]'
+        WHEN lastName = 'Platrier' THEN '["Plâtrerie","Cloisons","Isolation"]'
+        WHEN lastName = 'Chauffagiste' THEN '["Chauffage","Climatisation","Ventilation"]'
+        WHEN lastName = 'Domoticien' THEN '["Domotique","Automatisation","Sécurité"]'
+        WHEN lastName = 'Vitrier' THEN '["Vitrerie","Miroiterie","Fenêtres"]'
+        WHEN lastName = 'Metallier' THEN '["Métallerie","Serrurerie","Ferronnerie"]'
+        WHEN lastName = 'Serrurier' THEN '["Serrurerie","Sécurité","Métallerie"]'
+        WHEN lastName = 'Ascensoriste' THEN '["Ascenseurs","Monte-charges","Élévateurs"]'
+        WHEN lastName = 'Paysagiste' THEN '["Paysagisme","Jardinage","Aménagement extérieur"]'
+        WHEN lastName = 'Facade' THEN '["Façade","Ravalement","Isolation extérieure"]'
+        WHEN lastName = 'Isolation' THEN '["Isolation","Thermique","Acoustique"]'
+        WHEN lastName = 'Etancheite' THEN '["Étanchéité","Imperméabilisation","Toiture-terrasse"]'
+        WHEN lastName = 'Demolition' THEN '["Démolition","Déconstruction","Curage"]'
+        WHEN lastName = 'Terrassement' THEN '["Terrassement","Excavation","Fondations"]'
+        WHEN lastName = 'Charpentier' THEN '["Charpente","Ossature bois","Couverture"]'
+        WHEN lastName = 'Carrossier' THEN '["Carrosserie","Métallerie","Soudure"]'
+        WHEN lastName = 'Ferronnier' THEN '["Ferronnerie","Métallerie art","Forge"]'
+        WHEN lastName = 'Miroitier' THEN '["Miroiterie","Vitrerie","Encadrement"]'
+        WHEN lastName = 'Staffeur' THEN '["Staff","Ornements","Moulures"]'
+        WHEN lastName = 'Fumiste' THEN '["Fumisterie","Cheminées","Poêles"]'
+        WHEN lastName = 'Ramoneur' THEN '["Ramonage","Entretien conduits","Nettoyage"]'
+        WHEN lastName = 'Zingueur' THEN '["Zinguerie","Couverture","Gouttières"]'
+        WHEN lastName = 'Parqueteur' THEN '["Parquet","Revêtements de sol","Ponçage"]'
+        WHEN lastName = 'Mosaiste' THEN '["Mosaïque","Carrelage décoratif","Art"]'
+        WHEN lastName = 'Solier' THEN '["Sols","Revêtements souples","Linoléum"]'
+        WHEN lastName = 'Enduiseur' THEN '["Enduits","Finitions","Façades"]'
+        WHEN lastName = 'Cordiste' THEN '["Travaux en hauteur","Accès difficile","Sécurité"]'
+        WHEN lastName = 'Soudeur' THEN '["Soudure","Assemblage","Métallerie"]'
+        WHEN lastName = 'Plaquiste' THEN '["Plaques de plâtre","Cloisons","Faux plafonds"]'
+        WHEN lastName = 'Bardeur' THEN '["Bardage","Façades","Isolation extérieure"]'
+        WHEN lastName = 'Echafaudeur' THEN '["Échafaudage","Montage","Sécurité en hauteur"]'
+        WHEN lastName = 'Granitier' THEN '["Granit","Pierre","Marbrerie"]'
+        WHEN lastName = 'Paveur' THEN '["Pavage","Dallage","Aménagement extérieur"]'
+        ELSE '["Polyvalent","Multi-compétences","Rénovation générale"]'
+    END AS specialites,
+    CASE 
+        WHEN id % 3 = 0 THEN FALSE
+        ELSE TRUE
+    END AS disponible,
+    ROUND(3 + RAND() * 2, 1) AS note_moyenne,
+    CASE 
+        WHEN id % 4 = 0 THEN '1'  -- Chantier 1 (en cours)
+        WHEN id % 4 = 1 THEN '5'  -- Chantier 5 (en cours)
+        WHEN id % 4 = 2 THEN '11' -- Chantier 11 (en cours)
+        ELSE NULL
+    END AS current_worksite,
+    '["7","8"]' AS history_worksite
+FROM `users`
+WHERE role = 'artisan';
