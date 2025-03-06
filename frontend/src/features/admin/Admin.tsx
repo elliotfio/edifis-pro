@@ -225,6 +225,8 @@ export default function Admin() {
         return data;
     }, [users, searchQuery, sortColumn, sortDirection]);
 
+    if (error) return <div>Erreur lors du chargement des utilisateurs</div>;
+
     return (
         <div className="p-6">
             <div className="flex items-center gap-4 mb-6 ">

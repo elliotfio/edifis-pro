@@ -1,15 +1,10 @@
 import { useLogin } from "@/api/queries/authQueries"
 import { Button } from "@/components/ui/Button"
-import { Card } from "@/components/ui/Card"
 import { Input } from "@/components/ui/Input"
 import { loginSchema, type LoginFormData } from "@/validators/loginValidator"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
 import { useForm } from "react-hook-form"
-import { Link } from "react-router-dom"
-
-
-
 
 export default function Login() {
   const {
@@ -20,7 +15,7 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   })
 
-  const { mutate: loginUser, isPending } = useLogin();
+  const { mutate: loginUser } = useLogin();
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -36,55 +31,49 @@ export default function Login() {
   }
 
   return (
-    <Card>
-      <div className="text-center">
+    <div className="p-6 flex flex-col items-center justify-center min-h-screen">
+      <div className="w-full max-w-md">
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <span className="text-5xl font-bold uppercase text-primary">Edifis</span>
+        </div>
+
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 20 }}
-          className="mx-auto h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-lg shadow-md p-6"
         >
-          <span className="text-2xl text-white font-bold">Logo</span>
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+            <div className="space-y-4">
+              <Input
+                label="Email"
+                type="email"
+                {...register("email")}
+                error={errors.email?.message}
+                placeholder="votre@email.com"
+              />
+              <Input
+                label="Mot de passe"
+                type="password"
+                {...register("password")}
+                error={errors.password?.message}
+                placeholder="••••••••"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full"
+              isLoading={isSubmitting}
+              disabled={isSubmitting}
+              loadingText="Connexion en cours..."
+            >
+              Se connecter
+            </Button>
+          </form>
         </motion.div>
-        <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Connexion</h2>
       </div>
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-        <div className="rounded-md space-y-4">
-          <Input
-            label="Email"
-            type="email"
-            {...register("email")}
-            error={errors.email?.message}
-            placeholder="votre@email.com"
-          />
-          <Input
-            label="Mot de passe"
-            type="password"
-            {...register("password")}
-            error={errors.password?.message}
-            placeholder="••••••••"
-          />
-        </div>
-
-        <Button
-          type="submit"
-          isLoading={isSubmitting}
-          disabled={isSubmitting}
-          loadingText="Connexion en cours..."
-        >
-          Se connecter
-        </Button>
-
-        <div className="text-sm text-center">
-          <Link
-            to="/register"
-            className="font-medium text-blue-600 hover:text-blue-500 transition duration-150 ease-in-out"
-          >
-            Pas encore de compte ? S'inscrire
-          </Link>
-        </div>
-      </form>
-    </Card>
-
+    </div>
   )
 }

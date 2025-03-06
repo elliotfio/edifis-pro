@@ -3,22 +3,12 @@ import { api } from '@/api/interceptor';
 import { 
     ApiResponse, 
     LoginCredentials,
-    RegisterCredentials,
     AuthResponse,
     RefreshTokenRequest,
     User
 } from '@/types';
 
 class AuthService {
-    public async registerUser(user: RegisterCredentials): Promise<AuthResponse> {
-        const response = await api.fetchRequest('/api/auth/register', 'POST', user);
-        if (response.access_token && response.refresh_token) {
-            Cookies.set('access_token', response.access_token, { expires: 1 });
-            Cookies.set('refresh_token', response.refresh_token, { expires: 7 });
-        }
-        return response;
-    }
-
     public async loginUser(credentials: LoginCredentials): Promise<AuthResponse> {
         const response = await api.fetchRequest('/api/auth/login', 'POST', credentials);
         console.log('Login response:', response);

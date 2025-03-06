@@ -5,28 +5,6 @@ import { AuthResponse } from "@/types";
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 
-export const useRegister = () => {
-    const { login, setUser } = useAuthStore();
-
-    return useMutation({
-        mutationFn: async (userData: any) => {
-            const response = await authService.registerUser(userData);
-            if (response.access_token && response.refresh_token) {
-                login(response.access_token, response.refresh_token);
-                return { access_token: response.access_token, refresh_token: response.refresh_token };
-            } else {
-                throw new Error('Registration failed');
-            }
-        },
-        onSuccess: async (response: AuthResponse) => {
-            login(response.access_token, response.refresh_token);
-            const userData = await authService.getUserByToken(response.access_token);
-            setUser(userData);
-            console.log('Registration successful');
-        },
-    });
-};
-
 export const useLogin = () => {
     const { login, setUser, setIsAuthenticated } = useAuthStore();
     const navigate = useNavigate();
