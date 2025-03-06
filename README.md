@@ -1,5 +1,20 @@
 # EDIFIS
 
+## Description du projet
+
+EDIFIS est une solution complète de gestion pour les entreprises du BTP, conçue pour simplifier et optimiser tous les aspects de la gestion de chantiers. Notre plateforme permet aux artisans, chefs de chantier et personnel administratif de collaborer efficacement sur un même outil.
+
+### Vision
+
+Notre vision est de digitaliser le secteur du BTP en proposant une solution intuitive qui répond aux besoins spécifiques des différents acteurs du secteur. EDIFIS vise à réduire la charge administrative, optimiser la planification des ressources et améliorer la communication entre les équipes sur le terrain et au bureau.
+
+### Public cible
+
+- **Artisans** : Suivi des interventions, rapports de chantier, gestion du temps
+- **Chefs de chantier** : Planification, attribution des tâches, suivi d'avancement
+- **Personnel administratif** : Facturation, gestion des clients, reporting
+- **Direction** : Vue d'ensemble, KPIs, analyse de rentabilité
+
 ## Sommaire
 1. [Initialisation](#initialisation)
 2. [Arborescence](#arborescence)
@@ -171,20 +186,5 @@ Pour créer un nouveau compte utilisateur, cliquez sur "S'inscrire" et suivez le
 #### Sécurité et conformité
 - 🔒 Protection des données sensibles (RGPD)
 - 🛡️ Authentification sécurisée avec JWT
-
-## Description du projet
-
-EDIFIS est une solution complète de gestion pour les entreprises du BTP, conçue pour simplifier et optimiser tous les aspects de la gestion de chantiers. Notre plateforme permet aux artisans, chefs de chantier et personnel administratif de collaborer efficacement sur un même outil.
-
-### Vision
-
-Notre vision est de digitaliser le secteur du BTP en proposant une solution intuitive qui répond aux besoins spécifiques des différents acteurs du secteur. EDIFIS vise à réduire la charge administrative, optimiser la planification des ressources et améliorer la communication entre les équipes sur le terrain et au bureau.
-
-### Public cible
-
-- **Artisans** : Suivi des interventions, rapports de chantier, gestion du temps
-- **Chefs de chantier** : Planification, attribution des tâches, suivi d'avancement
-- **Personnel administratif** : Facturation, gestion des clients, reporting
-- **Direction** : Vue d'ensemble, KPIs, analyse de rentabilité
 
 ---
