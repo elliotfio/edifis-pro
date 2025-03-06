@@ -8,8 +8,10 @@ import AddWorksite from './components/AddWorksite';
 import WorksitesKanban from './components/WorksitesKanban';
 import WorksitesList from './components/WorksitesList';
 import WorksitesMap from './components/WorksitesMap';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function Worksites() {
+    const { user } = useAuthStore();
     const [view, setView] = useState<'list' | 'kanban' | 'map'>('list');
     const [sortColumn, setSortColumn] = useState<keyof Worksite>('name');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -44,12 +46,12 @@ export default function Worksites() {
     };
 
     const handleAddWorksite = (newWorksite: Partial<Worksite>) => {
-        setWorksites(prev => [...prev, newWorksite as Worksite]);
+        setWorksites((prev) => [...prev, newWorksite as Worksite]);
     };
 
     const handleUpdateWorksite = (updatedWorksite: Worksite) => {
-        setWorksites(currentWorksites => 
-            currentWorksites.map(worksite => 
+        setWorksites((currentWorksites) =>
+            currentWorksites.map((worksite) =>
                 worksite.id === updatedWorksite.id ? updatedWorksite : worksite
             )
         );
@@ -61,8 +63,8 @@ export default function Worksites() {
 
     const handleDeleteConfirm = () => {
         if (deleteModalWorksite) {
-            setWorksites(currentWorksites => 
-                currentWorksites.filter(worksite => worksite.id !== deleteModalWorksite.id)
+            setWorksites((currentWorksites) =>
+                currentWorksites.filter((worksite) => worksite.id !== deleteModalWorksite.id)
             );
             setDeleteModalWorksite(null);
         }
@@ -70,7 +72,7 @@ export default function Worksites() {
 
     const handleSort = (column: keyof Worksite) => {
         if (sortColumn === column) {
-            setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+            setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
         } else {
             setSortColumn(column);
             setSortDirection('asc');
@@ -82,7 +84,7 @@ export default function Worksites() {
         if (searchQuery) {
             const searchLower = searchQuery.toLowerCase();
             filtered = filtered.filter(
-                worksite =>
+                (worksite) =>
                     worksite.name.toLowerCase().includes(searchLower) ||
                     worksite.address.toLowerCase().includes(searchLower)
             );
@@ -138,10 +140,16 @@ export default function Worksites() {
             <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="flex gap-4 w-1/2">
                     <Searchbar onSearch={handleSearch} className="flex-1" />
-                    <Button variant="primary" className="w-auto gap-2" onClick={() => setIsAddModalOpen(true)}>
-                        <Plus size={16} />
-                        <span>Ajouter un chantier</span>
-                    </Button>
+                    {user && ['admin', 'employe'].includes(user.role) && (
+                        <Button
+                            variant="primary"
+                            className="w-auto gap-2"
+                            onClick={() => setIsAddModalOpen(true)}
+                        >
+                            <Plus size={16} />
+                            <span>Ajouter un chantier</span>
+                        </Button>
+                    )}
                 </div>
                 <div className="flex p-1 relative">
                     <AnimatePresence>
@@ -152,12 +160,7 @@ export default function Worksites() {
                                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                 animate={{
                                     width: '33.333333%',
-                                    x:
-                                        view === 'list'
-                                            ? '0%'
-                                            : view === 'kanban'
-                                            ? '100%'
-                                            : '200%',
+                                    x: view === 'list' ? '0%' : view === 'kanban' ? '100%' : '200%',
                                 }}
                             />
                         )}
@@ -218,16 +221,17 @@ export default function Worksites() {
                     <div className="bg-white rounded-lg p-6 w-[400px]">
                         <h3 className="text-lg font-semibold mb-2">Supprimer le chantier</h3>
                         <p className="text-gray-600 mb-6">
-                            Êtes-vous sûr de vouloir supprimer le chantier "{deleteModalWorksite.name}" ? Cette action est irréversible.
+                            Êtes-vous sûr de vouloir supprimer le chantier "
+                            {deleteModalWorksite.name}" ? Cette action est irréversible.
                         </p>
                         <div className="flex justify-end gap-3">
-                            <button 
+                            <button
                                 className="px-4 py-2 rounded hover:bg-gray-100"
                                 onClick={() => setDeleteModalWorksite(null)}
                             >
                                 Annuler
                             </button>
-                            <button 
+                            <button
                                 className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
                                 onClick={handleDeleteConfirm}
                             >

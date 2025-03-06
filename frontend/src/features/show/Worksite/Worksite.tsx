@@ -72,46 +72,66 @@ export default function Worksite() {
                 // Récupérer tous les utilisateurs du chantier
                 const [chefsResponse, artisansResponse] = await Promise.all([
                     fetch('http://localhost:3000/api/chefs'),
-                    fetch('http://localhost:3000/api/artisans')
+                    fetch('http://localhost:3000/api/artisans'),
                 ]);
 
                 const [chefsData, artisansData] = await Promise.all([
                     chefsResponse.json(),
-                    artisansResponse.json()
+                    artisansResponse.json(),
                 ]);
 
-                // Filtrer les chefs et artisans de ce chantier
-                const worksiteChefs = chefsData.filter((chef: any) => chef.current_worksite === id);
-                const worksiteArtisans = artisansData.filter((artisan: any) => artisan.current_worksite === id);
+                // Filtrer les chefs et artisans selon le statut du chantier
+                let worksiteChefs, worksiteArtisans;
+
+                if (data.status === 'completed') {
+                    // Pour les chantiers terminés, chercher dans l'historique
+                    worksiteChefs = chefsData.filter(
+                        (chef: any) => chef.worksite_history && chef.worksite_history.includes(id)
+                    );
+                    worksiteArtisans = artisansData.filter(
+                        (artisan: any) =>
+                            artisan.worksite_history && artisan.worksite_history.includes(id)
+                    );
+                } else {
+                    // Pour les chantiers en cours, chercher dans current_worksite
+                    worksiteChefs = chefsData.filter((chef: any) => chef.current_worksite === id);
+                    worksiteArtisans = artisansData.filter(
+                        (artisan: any) => artisan.current_worksite === id
+                    );
+                }
 
                 // Récupérer les données utilisateur pour chaque personne
-                const userPromises = [...worksiteChefs, ...worksiteArtisans].map(
-                    (person: any) => fetch(`http://localhost:3000/api/users/${person.user_id}`).then(res => res.json())
+                const userPromises = [...worksiteChefs, ...worksiteArtisans].map((person: any) =>
+                    fetch(`http://localhost:3000/api/users/${person.user_id}`).then((res) =>
+                        res.json()
+                    )
                 );
 
                 const users = await Promise.all(userPromises);
 
                 // Combiner les données utilisateur avec leurs rôles spécifiques
-                const formattedUsers: WorksiteUser[] = users.map((user: User) => {
+                const formattedUsers: WorksiteUser[] = [];
+
+                for (let i = 0; i < users.length; i++) {
+                    const user = users[i];
                     const chef = worksiteChefs.find((c: any) => c.user_id === user.id);
                     const artisan = worksiteArtisans.find((a: any) => a.user_id === user.id);
-                    
+
                     if (chef) {
-                        return {
+                        formattedUsers.push({
                             user,
                             years_experience: chef.years_experience,
-                            disponible: chef.disponible
-                        };
+                            disponible: chef.disponible,
+                        });
                     } else if (artisan) {
-                        return {
+                        formattedUsers.push({
                             user,
                             specialites: artisan.specialites,
                             note_moyenne: artisan.note_moyenne,
-                            disponible: artisan.disponible
-                        };
+                            disponible: artisan.disponible,
+                        });
                     }
-                    return { user };
-                });
+                }
 
                 setWorksiteUsers(formattedUsers);
             } catch (error) {
@@ -132,8 +152,12 @@ export default function Worksite() {
     const statusColor = getColorStatus(worksite.status);
     const statusLabel = getLabelStatus(worksite.status);
 
-    const chefs = worksiteUsers.filter(u => u.user.role === 'chef');
-    const artisans = worksiteUsers.filter(u => u.user.role === 'artisan');
+    const chefs = worksiteUsers.filter((u) => u.user.role === 'chef');
+    const artisans = worksiteUsers.filter((u) => u.user.role === 'artisan');
+
+    const cleanedString = String(worksite.specialities_needed)
+        .replace(/^\[|\]$/g, '') // Enlever les crochets au début et à la fin
+        .replace(/['"]|"/g, ''); // Enlever les apostrophes et guillemets doubles
 
     return (
         <div className="container mx-auto p-6">
@@ -197,10 +221,10 @@ export default function Worksite() {
                         <h2 className="font-medium">Spécialités</h2>
                     </div>
                     <div className="flex flex-wrap gap-1">
-                        {worksite.specialities_needed.map((speciality) => (
+                        {cleanedString.split(',').map((speciality) => (
                             <span
                                 key={speciality}
-                                className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-sm"
+                                className="bg-blue-100 text-blue-800 px-3 py-0.5 rounded-full text-sm"
                             >
                                 {speciality}
                             </span>
@@ -219,7 +243,12 @@ export default function Worksite() {
                     attributionControl={false}
                 >
                     <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-                    <Marker position={[worksite.coordinates.x, worksite.coordinates.y] as LatLngExpression} icon={customIcon} />
+                    <Marker
+                        position={
+                            [worksite.coordinates.x, worksite.coordinates.y] as LatLngExpression
+                        }
+                        icon={customIcon}
+                    />
                 </MapContainer>
             </div>
 
@@ -227,7 +256,11 @@ export default function Worksite() {
             <div className="bg-white rounded-lg border border-gray-400 shadow-sm p-4 mb-8">
                 <div className="flex gap-2 items-center mb-4">
                     <Users size={20} />
-                    <h2 className="font-medium">Équipe sur le chantier</h2>
+                    <h2 className="font-medium">
+                        {worksite.status === 'completed'
+                            ? 'Équipe ayant travaillé sur ce chantier'
+                            : 'Équipe sur le chantier'}
+                    </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Chefs */}
@@ -288,7 +321,13 @@ export default function Worksite() {
                                                 {user.firstName} {user.lastName}
                                             </div>
                                             <div className="text-sm text-gray-600">
-                                                {specialites?.join(', ')}
+                                                {specialites
+                                                    ? specialites
+                                                          .map((spec) =>
+                                                              spec.replace(/['"[\]]/g, '')
+                                                          )
+                                                          .join(', ')
+                                                    : ''}
                                             </div>
                                             {note_moyenne && (
                                                 <div className="text-sm text-gray-600">
@@ -312,9 +351,7 @@ export default function Worksite() {
                                 </Link>
                             ))}
                             {artisans.length === 0 && (
-                                <div className="text-gray-600 text-sm">
-                                    Aucun ouvrier assigné
-                                </div>
+                                <div className="text-gray-600 text-sm">Aucun ouvrier assigné</div>
                             )}
                         </div>
                     </div>

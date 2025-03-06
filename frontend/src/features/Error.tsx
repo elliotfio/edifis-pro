@@ -13,7 +13,7 @@ export default function ErrorPage({
   message = "Désolé, nous n'avons pas pu trouver la page que vous recherchez.",
 }: ErrorPageProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+    <div className="w-[100vw] h-[100vh] flex items-center justify-center bg-gray-100 p-4 z-[1000]">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

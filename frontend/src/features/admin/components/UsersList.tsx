@@ -51,7 +51,7 @@ export default function UsersList({
     const handleDelete = async (userId: number) => {
         try {
             const response = await fetch(`http://localhost:3000/api/users/${userId}`, {
-                method: 'DELETE'
+                method: 'DELETE',
             });
 
             if (!response.ok) {
@@ -91,8 +91,8 @@ export default function UsersList({
                         <TableHead className="cursor-pointer w-[30%]">Email</TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'date' ? sortDirection : null}
-                            onClick={() => onSort('date')}
+                            sortDirection={sortColumn === 'date_creation' ? sortDirection : null}
+                            onClick={() => onSort('date_creation')}
                             className="cursor-pointer w-[15%]"
                         >
                             Date d'arrivée
@@ -164,11 +164,12 @@ export default function UsersList({
                     <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
                         <h2 className="text-xl font-semibold mb-4">Confirmer la suppression</h2>
                         <p className="mb-6">
-                            Êtes-vous sûr de vouloir supprimer l'utilisateur {deleteModalUser.user.firstName} {deleteModalUser.user.lastName} ?
-                            Cette action est irréversible.
+                            Êtes-vous sûr de vouloir supprimer l'utilisateur{' '}
+                            {deleteModalUser.user.firstName} {deleteModalUser.user.lastName} ? Cette
+                            action est irréversible.
                         </p>
                         <div className="flex justify-end gap-4">
-                        <button 
+                            <button
                                 className="px-4 py-2 rounded hover:bg-gray-100"
                                 onClick={() => setDeleteModalUser(null)}
                             >

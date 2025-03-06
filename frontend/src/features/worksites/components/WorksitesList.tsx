@@ -14,6 +14,7 @@ import { Eye, Pencil, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import EditWorksite from './EditWorksite';
+import { useAuthStore } from '@/stores/authStore';
 
 interface WorksitesListProps {
     data: Worksite[];
@@ -39,6 +40,7 @@ export default function WorksitesList({
     onDelete,
 }: WorksitesListProps) {
     const navigate = useNavigate();
+    const { user } = useAuthStore();
     const [selectedWorksite, setSelectedWorksite] = useState<Worksite | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -144,22 +146,28 @@ export default function WorksitesList({
                                     >
                                         <Eye size={16} />
                                     </Button>
-                                    <Button
-                                        variant="primary"
-                                        className="text-gray-600"
-                                        onClick={() => handleEditClick(worksite)}
-                                    >
-                                        <Pencil className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="primary"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDelete(worksite);
-                                        }}
-                                    >
-                                        <Trash size={16} />
-                                    </Button>
+
+                                    {/* Boutons d'édition et de suppression visibles uniquement pour admin et employé */}
+                                    {user && ['admin', 'employe'].includes(user.role) && (
+                                        <>
+                                            <Button
+                                                variant="primary"
+                                                className="text-gray-600"
+                                                onClick={() => handleEditClick(worksite)}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="primary"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(worksite);
+                                                }}
+                                            >
+                                                <Trash size={16} />
+                                            </Button>
+                                        </>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}
