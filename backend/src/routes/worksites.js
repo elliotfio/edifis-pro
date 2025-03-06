@@ -285,4 +285,33 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Ajouter ces routes
+router.get("/status/:status", async (req, res) => {
+  try {
+    const { status } = req.params;
+    const [worksites] = await pool.query(
+      "SELECT * FROM worksites WHERE status = ?",
+      [status]
+    );
+    res.status(200).json(worksites);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des chantiers:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+router.get("/chef/:chef_id", async (req, res) => {
+  try {
+    const { chef_id } = req.params;
+    const [worksites] = await pool.query(
+      "SELECT * FROM worksites WHERE chef_id = ?",
+      [chef_id]
+    );
+    res.status(200).json(worksites);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des chantiers:", error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 module.exports = router;

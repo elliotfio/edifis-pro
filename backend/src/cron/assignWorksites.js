@@ -12,43 +12,48 @@ async function assignWorksites() {
   try {
     await connection.beginTransaction();
 
-    // 1. Récupérer les chefs de chantier disponibles
-    const [availableChefs] = await connection.query(`
-      SELECT c.user_id, c.years_experience 
-      FROM chef c
-      WHERE c.current_worksite IS NULL OR c.current_worksite = ''
-      ORDER BY c.years_experience DESC
+    // Créer la table affectations si elle n'existe pas
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS affectations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        worksite_id INT NOT NULL,
+        artisan_id INT NOT NULL,
+        specialite VARCHAR(255) NOT NULL,
+        date_affectation DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (worksite_id) REFERENCES worksites(id) ON DELETE CASCADE,
+        FOREIGN KEY (artisan_id) REFERENCES artisan(user_id) ON DELETE CASCADE
+      )
     `);
 
-    console.log(`✅ Chefs disponibles: ${availableChefs.length}`);
+    // Récupérer les chefs disponibles
+    const [chefs] = await connection.query(
+      "SELECT user_id, years_experience FROM chef WHERE current_worksite IS NULL ORDER BY years_experience DESC"
+    );
 
-    if (availableChefs.length === 0) {
+    console.log(`✅ Chefs disponibles: ${chefs.length}`);
+
+    if (chefs.length === 0) {
       console.log("❌ Aucun chef de chantier disponible");
+      await connection.commit();
       return;
     }
 
-    // 2. Récupérer les chantiers sans chef, du plus ancien au plus récent
-    const [pendingWorksites] = await connection.query(`
-      SELECT id, name, specialities_needed, created_at
-      FROM worksites
-      WHERE status = 'no_attributed'
-      ORDER BY created_at ASC
-    `);
+    // Récupérer les chantiers en attente
+    const [pendingWorksites] = await connection.query(
+      "SELECT id, name, specialities_needed, created_at FROM worksites WHERE status = 'attributed' ORDER BY created_at ASC"
+    );
 
     console.log(`✅ Chantiers en attente: ${pendingWorksites.length}`);
 
     if (pendingWorksites.length === 0) {
       console.log("❌ Aucun chantier en attente");
+      await connection.commit();
       return;
     }
 
     // 3. Pour chaque chef disponible, attribuer un chantier
-    for (
-      let i = 0;
-      i < Math.min(availableChefs.length, pendingWorksites.length);
-      i++
-    ) {
-      const chef = availableChefs[i];
+    for (let i = 0; i < Math.min(chefs.length, pendingWorksites.length); i++) {
+      const chef = chefs[i];
       const worksite = pendingWorksites[i];
 
       console.log(
@@ -103,32 +108,13 @@ async function assignWorksites() {
         if (availableArtisans.length > 0) {
           const artisanId = availableArtisans[0].user_id;
 
-          // Vérifier si la table affectations existe
-          try {
-            await connection.query(`
-              SELECT 1 FROM affectations LIMIT 1
-            `);
-          } catch (error) {
-            // Créer la table si elle n'existe pas
-            await connection.query(`
-              CREATE TABLE IF NOT EXISTS affectations (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                artisan_id VARCHAR(255) NOT NULL,
-                chantier_id VARCHAR(255) NOT NULL,
-                specialite VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-              )
-            `);
-            console.log("✅ Table affectations créée");
-          }
-
           // Créer une affectation pour cet artisan
           await connection.query(
             `
-            INSERT INTO affectations (artisan_id, chantier_id, specialite)
+            INSERT INTO affectations (worksite_id, artisan_id, specialite)
             VALUES (?, ?, ?)
           `,
-            [artisanId, worksite.id, speciality]
+            [worksite.id, artisanId, speciality]
           );
 
           // Mettre à jour la disponibilité de l'artisan
