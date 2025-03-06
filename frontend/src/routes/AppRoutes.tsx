@@ -16,20 +16,23 @@ import PublicRoutes from '@/routes/PublicRoutes';
 import { useAuthStore } from '@/stores/authStore';
 import { useLayoutStore } from '@/stores/layoutStore';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { useAutoLogin } from '@/api/queries/authQueries';
+import { useEffect } from 'react';
+import Loader from '@/components/ui/Loader';
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuthStore();
   const { isExpanded } = useLayoutStore();
 
 
-//   const { refetch: autoLogin, isPending } = useAutoLogin();
+   const { refetch: autoLogin, isPending } = useAutoLogin();
 
-  // Faire l'auth
-  // useEffect(() => {
-  //   autoLogin();
-  // }, [autoLogin]);
+  
+   useEffect(() => {
+     autoLogin();
+   }, [autoLogin]);
 
-//   if (isPending) return <Loader />
+  if (isPending) return <Loader />
 
 
   return (

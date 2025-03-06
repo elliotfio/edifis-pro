@@ -56,25 +56,60 @@ router.post('/register', async (req, res) => {
 });
 
 
-// Connexion
+
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body; // ✅ Correspond au JSON envoyé
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Email et mot de passe requis' });
+    }
+
     try {
         const [[user]] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+
         if (!user) {
-            return res.status(400).json({ message: 'Identifiants incorrects' });
+            return res.status(401).json({ message: 'Identifiants incorrects' });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password); // ✅ Vérifie avec la colonne correcte
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Identifiants incorrects' });
+        // Vérification du mot de passe avec bcrypt
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Identifiants incorrects' });
         }
 
+        // Génération des tokens
         const tokens = generateTokens(user);
-        res.json({ ...tokens, user: { id: user.id, firstName: user.firstName, lastName: user.lastName, role: user.role } });
-    } catch (error) {
-        console.error("Erreur lors du login :", error);
-        res.status(500).json({ message: 'Erreur serveur', error });
+
+        // Sécuriser la réponse en supprimant le mot de passe
+        if (user) {
+            const { password: _, ...userWithoutPassword } = user;
+            res.status(200).json({
+                message: 'Connexion réussie !',
+                user: userWithoutPassword,
+                ...tokens
+            });
+        } else {
+            res.status(401).json({ message: 'Utilisateur non trouvé' });
+        }
+
+    } catch (err) {
+        console.error("❌ Erreur lors de la connexion:", err);
+        res.status(500).json({ message: 'Erreur serveur, veuillez réessayer plus tard' });
+    }
+});
+
+router.get('/me', verifyToken, async (req, res) => {
+    try {
+        const [[user]] = await pool.query('SELECT id, firstName, lastName, email, role FROM users WHERE id = ?', [req.user.id]);
+
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        res.json(user);
+    } catch (err) {
+        console.error('Erreur lors de la récupération des informations utilisateur:', err);
+        res.status(500).json({ message: 'Erreur serveur' });
     }
 });
 
