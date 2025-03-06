@@ -12,40 +12,38 @@ import {
 class AuthService {
     public async registerUser(user: RegisterCredentials): Promise<AuthResponse> {
         const response = await api.fetchRequest('/api/auth/register', 'POST', user);
-        if (response.accesstoken) {
+        if (response.access_token && response.refresh_token) {
             Cookies.set('access_token', response.access_token, { expires: 1 });
             Cookies.set('refresh_token', response.refresh_token, { expires: 7 });
         }
         return response;
-
     }
 
     public async loginUser(credentials: LoginCredentials): Promise<AuthResponse> {
         const response = await api.fetchRequest('/api/auth/login', 'POST', credentials);
-        console.log(response);
-        if (response.accessToken) { 
-            Cookies.set('access_token', response.accessToken, { expires: 1 });
-            Cookies.set('refresh_token', response.refreshToken, { expires: 7 });
-        }
-        return response;
-
-    }
-
-    public async getUserByToken(accessToken: string): Promise<ApiResponse<User> | null> {
-        if (!accessToken) {
-            return null;
-        }
-        return api.fetchRequest('/api/auth/me', 'GET', null, true);
-    }
-
-    public async refreshToken(refreshToken: string): Promise<AuthResponse> {
-        const response = await api.fetchRequest('/api/auth/refresh', 'POST', { token: refreshToken });
-        if (response.accesstoken) {
+        console.log('Login response:', response);
+        if (response.access_token && response.refresh_token) { 
             Cookies.set('access_token', response.access_token, { expires: 1 });
             Cookies.set('refresh_token', response.refresh_token, { expires: 7 });
         }
         return response;
+    }
 
+    public async getUserByToken(accessToken: string): Promise<User | null> {
+        if (!accessToken) {
+            return null;
+        }
+        const response = await api.fetchRequest('/api/auth/me', 'GET', null, true);
+        return response;
+    }
+
+    public async refreshToken(refreshToken: string): Promise<AuthResponse> {
+        const response = await api.fetchRequest('/api/auth/refresh-token', 'POST', { refreshToken });
+        if (response.access_token && response.refresh_token) {
+            Cookies.set('access_token', response.access_token, { expires: 1 });
+            Cookies.set('refresh_token', response.refresh_token, { expires: 7 });
+        }
+        return response;
     }
 
     public async logout(refreshToken: string): Promise<ApiResponse<void>> {

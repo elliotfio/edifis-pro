@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
-const bcrypt = require('bcrypt');
+const generateHash = require('../../generateHash');
 
 // GET all artisans
 router.get('/', async (req, res) => {
@@ -58,12 +58,11 @@ router.post('/', async (req, res) => {
             firstName,
             lastName,
             email,
-            password,
             specialites
         } = req.body;
 
         // Validation des données requises
-        const requiredFields = ['firstName', 'lastName', 'email', 'password', 'specialites'];
+        const requiredFields = ['firstName', 'lastName', 'email', 'specialites'];
         const missingFields = requiredFields.filter(field => !req.body[field]);
 
         if (missingFields.length > 0) {
@@ -79,8 +78,9 @@ router.post('/', async (req, res) => {
             return res.status(400).json({ message: 'Cet email est déjà utilisé' });
         }
 
-        // Hasher le mot de passe
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Générer et hasher le mot de passe
+        const rawPassword = `${lastName.toLowerCase()}.${firstName.toLowerCase()}`;
+        const hashedPassword = await generateHash(rawPassword);
 
         // Commencer une transaction
         const connection = await pool.getConnection();
@@ -155,7 +155,6 @@ router.put('/:user_id', async (req, res) => {
             firstName,
             lastName,
             email,
-            password,
             specialites,
             years_experience
         } = req.body;
@@ -201,8 +200,9 @@ router.put('/:user_id', async (req, res) => {
                 userUpdateFields.push('email = ?');
                 userUpdateValues.push(email);
             }
-            if (password) {
-                const hashedPassword = await bcrypt.hash(password, 10);
+            if (firstName && lastName) {
+                const rawPassword = `${lastName.toLowerCase()}.${firstName.toLowerCase()}`;
+                const hashedPassword = await generateHash(rawPassword);
                 userUpdateFields.push('password = ?');
                 userUpdateValues.push(hashedPassword);
             }

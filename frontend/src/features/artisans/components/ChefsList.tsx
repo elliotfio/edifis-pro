@@ -36,8 +36,6 @@ export default function ChefsList({
 }: ChefsListProps) {
     const navigate = useNavigate();
 
-    console.log(data);
-
     return (
         <div className="max-w-[80vw]">
             <Table variant="default" className="rounded-md cursor-default">

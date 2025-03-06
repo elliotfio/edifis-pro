@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
+const generateHash = require('../../generateHash');
 
 // Error handler middleware
 const handleError = (err, res) => {
@@ -89,7 +90,8 @@ router.post('/', async (req, res) => {
 
         validateRole(role);
 
-        const password = `${lastName}.${firstName}`;
+        const rawPassword = `${lastName.toLowerCase()}.${firstName.toLowerCase()}`;
+        const password = await generateHash(rawPassword);
         const date_creation = new Date().toISOString().split('T')[0];
 
         // Based on role, validate required fields
@@ -171,9 +173,12 @@ router.put('/:id', async (req, res) => {
         }
 
         // 1. Mettre à jour les informations de base de l'utilisateur
+        const rawPassword = `${lastName.toLowerCase()}.${firstName.toLowerCase()}`;
+        const hashedPassword = await generateHash(rawPassword);
+        
         await connection.query(
-            'UPDATE users SET firstName = ?, lastName = ?, email = ?, role = ? WHERE id = ?',
-            [firstName, lastName, email, role.toLowerCase(), userId]
+            'UPDATE users SET firstName = ?, lastName = ?, email = ?, role = ?, password = ? WHERE id = ?',
+            [firstName, lastName, email, role.toLowerCase(), hashedPassword, userId]
         );
 
         // 2. Si le rôle a changé, gérer les tables spécifiques

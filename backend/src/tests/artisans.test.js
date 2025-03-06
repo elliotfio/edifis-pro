@@ -2,7 +2,7 @@ const request = require('supertest');
 const express = require('express');
 const artisansRouter = require('../routes/artisans');
 const pool = require('../config/db');
-const bcrypt = require('bcrypt');
+const generateHash = require('../../generateHash');
 
 const app = express();
 app.use(express.json());
@@ -14,10 +14,8 @@ jest.mock('../config/db', () => ({
     getConnection: jest.fn()
 }));
 
-// Mock de bcrypt
-jest.mock('bcrypt', () => ({
-    hash: jest.fn().mockResolvedValue('hashedPassword')
-}));
+// Mock de generateHash
+jest.mock('../../generateHash', () => jest.fn().mockResolvedValue('hashedPassword'));
 
 describe('Artisans API', () => {
     let mockConnection;
@@ -103,7 +101,6 @@ describe('Artisans API', () => {
             firstName: 'John',
             lastName: 'Doe',
             email: 'john@example.com',
-            password: 'password123',
             specialites: ['Plomberie', 'Électricité']
         };
 

@@ -8,6 +8,8 @@ const express = require('express');
 const router = require('../routes/users');
 const pool = require('../config/db');
 
+jest.mock('../../generateHash', () => jest.fn().mockResolvedValue('hashedPassword'));
+
 const app = express();
 app.use(express.json());
 app.use('/api/users', router);
@@ -163,7 +165,7 @@ describe('User Routes', () => {
             // Verify correct SQL parameters
             expect(mockConnection.query).toHaveBeenCalledWith(
                 'INSERT INTO users (firstName, lastName, email, password, role, date_creation) VALUES (?, ?, ?, ?, ?, ?)',
-                ['John', 'Doe', 'john@edifis.fr', 'Doe.John', 'artisan', expect.any(String)]
+                ['John', 'Doe', 'john@edifis.fr', 'hashedPassword', 'artisan', expect.any(String)]
             );
             expect(mockConnection.query).toHaveBeenCalledWith(
                 'INSERT INTO artisan (user_id, specialites, disponible) VALUES (?, ?, true)',
@@ -197,7 +199,7 @@ describe('User Routes', () => {
             // Verify correct SQL parameters
             expect(mockConnection.query).toHaveBeenCalledWith(
                 'INSERT INTO users (firstName, lastName, email, password, role, date_creation) VALUES (?, ?, ?, ?, ?, ?)',
-                ['Jane', 'Smith', 'jane@edifis.fr', 'Smith.Jane', 'chef', expect.any(String)]
+                ['Jane', 'Smith', 'jane@edifis.fr', 'hashedPassword', 'chef', expect.any(String)]
             );
             expect(mockConnection.query).toHaveBeenCalledWith(
                 'INSERT INTO chef (user_id, years_experience) VALUES (?, ?)',
@@ -230,7 +232,7 @@ describe('User Routes', () => {
             // Verify correct SQL parameters
             expect(mockConnection.query).toHaveBeenCalledWith(
                 'INSERT INTO users (firstName, lastName, email, password, role, date_creation) VALUES (?, ?, ?, ?, ?, ?)',
-                ['Bob', 'Wilson', 'bob@edifis.fr', 'Wilson.Bob', 'employe', expect.any(String)]
+                ['Bob', 'Wilson', 'bob@edifis.fr', 'hashedPassword', 'employe', expect.any(String)]
             );
             expect(mockConnection.query).toHaveBeenCalledWith(
                 'INSERT INTO employe (user_id) VALUES (?)',
@@ -302,29 +304,30 @@ describe('User Routes', () => {
     describe('PUT /api/users/:id', () => {
         it('should update an artisan user', async () => {
             const mockUser = {
-                id: 1,
-                role: 'artisan'
-            };
-
-            const mockUpdate = {
-                firstName: 'John Updated',
+                firstName: 'John',
+                lastName: 'Doe',
                 email: 'john.updated@edifis.fr',
-                specialites: ['plomberie', 'menuiserie']
+                role: 'artisan',
+                oldRole: 'artisan',
+                specialites: ['plomberie']
             };
 
             mockConnection.query
-                .mockResolvedValueOnce([[mockUser]])  // Check user exists
-                .mockResolvedValueOnce([{ affectedRows: 1 }])  // Update users table
-                .mockResolvedValueOnce([{ affectedRows: 1 }]); // Update artisan table
+                .mockResolvedValueOnce([{ id: 1 }]) // user exists
+                .mockResolvedValueOnce([]) // update user
+                .mockResolvedValueOnce([]); // update artisan
 
             const response = await request(app)
                 .put('/api/users/1')
-                .send(mockUpdate);
+                .send(mockUser);
 
             expect(response.status).toBe(200);
-            expect(response.body.message).toBe('Utilisateur mis à jour avec succès');
+            expect(mockConnection.beginTransaction).toHaveBeenCalled();
             expect(mockConnection.commit).toHaveBeenCalled();
-            expect(mockConnection.release).toHaveBeenCalled();
+            expect(mockConnection.query).toHaveBeenCalledWith(
+                'UPDATE users SET firstName = ?, lastName = ?, email = ?, role = ?, password = ? WHERE id = ?',
+                ['John', 'Doe', 'john.updated@edifis.fr', 'artisan', 'hashedPassword', 1]
+            );
         });
 
         it('should update a chef user', async () => {

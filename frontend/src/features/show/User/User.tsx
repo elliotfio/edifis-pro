@@ -110,7 +110,6 @@ export default function UserShow() {
                         throw new Error('Erreur lors de la récupération des données chef');
                     }
                     const chefData = await chefResponse.json();
-                    console.log(chefData)
                     setArtisanData({
                         user_id: chefData.user_id,
                         specialites: chefData.specialites || [],
