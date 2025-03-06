@@ -12,6 +12,14 @@ const handleError = (err, res) => {
     }
 };
 
+// Validate role middleware
+const validateRole = (role) => {
+    const validRoles = ['artisan', 'chef', 'employe'];
+    if (!role || !validRoles.includes(role.toLowerCase())) {
+        throw new Error('Role invalide');
+    }
+};
+
 // GET all users
 router.get('/', async (req, res) => {
     try {
@@ -43,6 +51,9 @@ router.get('/:id', async (req, res) => {
                     'SELECT specialites, disponible, note_moyenne, current_worksite FROM artisan WHERE user_id = ?',
                     [userId]
                 );
+                if (artisanInfo) {
+                    artisanInfo.specialites = JSON.parse(artisanInfo.specialites);
+                }
                 roleInfo = artisanInfo;
                 break;
             case 'chef':
@@ -71,11 +82,18 @@ router.post('/', async (req, res) => {
         await connection.beginTransaction();
         
         const { firstName, lastName, email, role, specialites, years_experience } = req.body;
+        
+        if (!firstName || !lastName || !email || !role) {
+            throw new Error('Champs obligatoires manquants');
+        }
+
+        validateRole(role);
+
         const password = `${lastName}.${firstName}`;
         const date_creation = new Date().toISOString().split('T')[0];
 
         // Based on role, validate required fields
-        switch (role?.toLowerCase()) {
+        switch (role.toLowerCase()) {
             case 'artisan':
                 if (!specialites || !Array.isArray(specialites) || specialites.length === 0) {
                     throw new Error('Spécialités requises pour un artisan');
@@ -86,16 +104,12 @@ router.post('/', async (req, res) => {
                     throw new Error('Années d\'expérience requises pour un chef');
                 }
                 break;
-            case 'employe':
-                break;
-            default:
-                throw new Error('Role invalide');
         }
 
         // Insert into users table
         const [result] = await connection.query(
             'INSERT INTO users (firstName, lastName, email, password, role, date_creation) VALUES (?, ?, ?, ?, ?, ?)',
-            [firstName, lastName, email, password, role, date_creation]
+            [firstName, lastName, email, password, role.toLowerCase(), date_creation]
         );
 
         const userId = result.insertId;
@@ -108,7 +122,7 @@ router.post('/', async (req, res) => {
             case 'artisan':
                 await connection.query(
                     'INSERT INTO artisan (user_id, specialites, disponible) VALUES (?, ?, true)',
-                    [userId, specialites.join(', ')]
+                    [userId, JSON.stringify(specialites)]
                 );
                 break;
             case 'chef':
@@ -136,70 +150,102 @@ router.post('/', async (req, res) => {
 
 // PUT user
 router.put('/:id', async (req, res) => {
+    const userId = parseInt(req.params.id);
+    const { firstName, lastName, email, role, specialites, years_experience, oldRole } = req.body;
+
+    if (!firstName || !lastName || !email || !role || !oldRole) {
+        throw new Error('Champs obligatoires manquants');
+    }
+
+    validateRole(role);
+    validateRole(oldRole);
+
     const connection = await pool.getConnection();
-    
     try {
         await connection.beginTransaction();
-        
-        const userId = req.params.id;
-        const { firstName, lastName, email, role, specialites, years_experience } = req.body;
-        
-        // Check if user exists
-        const [[existingUser]] = await connection.query(
-            'SELECT role FROM users WHERE id = ?',
-            [userId]
-        );
-        
-        if (!existingUser) {
+
+        // Vérifier si l'utilisateur existe
+        const [users] = await connection.query('SELECT * FROM users WHERE id = ?', [userId]);
+        if (users.length === 0) {
             throw new Error('Utilisateur non trouvé');
         }
 
-        // Update users table
-        const updates = [];
-        const values = [];
-        if (firstName) {
-            updates.push('firstName = ?');
-            values.push(firstName);
-        }
-        if (lastName) {
-            updates.push('lastName = ?');
-            values.push(lastName);
-        }
-        if (email) {
-            updates.push('email = ?');
-            values.push(email);
-        }
+        // 1. Mettre à jour les informations de base de l'utilisateur
+        await connection.query(
+            'UPDATE users SET firstName = ?, lastName = ?, email = ?, role = ? WHERE id = ?',
+            [firstName, lastName, email, role.toLowerCase(), userId]
+        );
 
-        if (updates.length > 0) {
-            values.push(userId);
-            await connection.query(
-                `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
-                values
-            );
-        }
+        // 2. Si le rôle a changé, gérer les tables spécifiques
+        if (oldRole.toLowerCase() !== role.toLowerCase()) {
+            // Supprimer l'ancienne entrée selon le rôle
+            switch (oldRole.toLowerCase()) {
+                case 'artisan':
+                    await connection.query('DELETE FROM artisan WHERE user_id = ?', [userId]);
+                    break;
+                case 'chef':
+                    await connection.query('DELETE FROM chef WHERE user_id = ?', [userId]);
+                    break;
+                case 'employe':
+                    await connection.query('DELETE FROM employe WHERE user_id = ?', [userId]);
+                    break;
+            }
 
-        // Update role specific info
-        switch (existingUser.role.toLowerCase()) {
-            case 'artisan':
-                if (specialites && Array.isArray(specialites)) {
+            // Créer la nouvelle entrée selon le nouveau rôle
+            switch (role.toLowerCase()) {
+                case 'artisan':
+                    if (!specialites || !Array.isArray(specialites) || specialites.length === 0) {
+                        throw new Error('Spécialités requises pour un artisan');
+                    }
                     await connection.query(
-                        'UPDATE artisan SET specialites = ? WHERE user_id = ?',
-                        [specialites.join(', '), userId]
+                        'INSERT INTO artisan (user_id, specialites, disponible) VALUES (?, ?, true)',
+                        [userId, JSON.stringify(specialites)]
                     );
-                }
-                break;
-            case 'chef':
-                if (years_experience) {
+                    break;
+                case 'chef':
+                    if (!years_experience) {
+                        throw new Error('Années d\'expérience requises pour un chef');
+                    }
                     await connection.query(
-                        'UPDATE chef SET years_experience = ? WHERE user_id = ?',
-                        [years_experience, userId]
+                        'INSERT INTO chef (user_id, years_experience) VALUES (?, ?)',
+                        [userId, years_experience]
                     );
-                }
-                break;
+                    break;
+                case 'employe':
+                    await connection.query(
+                        'INSERT INTO employe (user_id) VALUES (?)',
+                        [userId]
+                    );
+                    break;
+            }
+        } else {
+            // Si même rôle, mettre à jour les champs spécifiques
+            switch (role.toLowerCase()) {
+                case 'artisan':
+                    if (specialites) {
+                        if (!Array.isArray(specialites) || specialites.length === 0) {
+                            throw new Error('Spécialités invalides pour un artisan');
+                        }
+                        await connection.query(
+                            'UPDATE artisan SET specialites = ? WHERE user_id = ?',
+                            [JSON.stringify(specialites), userId]
+                        );
+                    }
+                    break;
+                case 'chef':
+                    if (years_experience) {
+                        await connection.query(
+                            'UPDATE chef SET years_experience = ? WHERE user_id = ?',
+                            [years_experience, userId]
+                        );
+                    }
+                    break;
+            }
         }
 
         await connection.commit();
         res.json({ message: 'Utilisateur mis à jour avec succès' });
+
     } catch (err) {
         await connection.rollback();
         handleError(err, res);

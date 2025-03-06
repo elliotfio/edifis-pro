@@ -1,13 +1,12 @@
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { SelectInput } from '@/components/ui/SelectInput';
-import { WORKSITE_SPECIALITIES, WorksiteSpeciality } from '@/types/worksiteType';
 import { UserRole } from '@/types/userType';
+import { WORKSITE_SPECIALITIES, WorksiteSpeciality } from '@/types/worksiteType';
+import { UserFormData, userSchema } from '@/validators/userValidator';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { HardHat, Mail, User, UserCog } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { userSchema, UserFormData } from '@/validators/userValidator';
-import { useEffect } from 'react';
 
 interface EditUserProps {
     isOpen: boolean;
@@ -59,6 +58,21 @@ export default function EditUser({ isOpen, onClose, onSubmit, user }: EditUserPr
 
     const selectedRole = watch('role');
     const selectedSpecialities = watch('specialites');
+
+    const handleRoleChange = (value: string) => {
+        setValue('role', value as UserRole, { shouldValidate: true });
+        // Réinitialiser les champs spécifiques lors du changement de rôle
+        if (value === 'artisan') {
+            setValue('years_experience', undefined);
+            setValue('specialites', []);
+        } else if (value === 'chef') {
+            setValue('specialites', []);
+            setValue('years_experience', 0);
+        } else {
+            setValue('specialites', []);
+            setValue('years_experience', undefined);
+        }
+    };
 
     const handleSpecialitySelect = (speciality: string) => {
         const currentSpecialities = selectedSpecialities || [];
@@ -142,7 +156,7 @@ export default function EditUser({ isOpen, onClose, onSubmit, user }: EditUserPr
                             name="role"
                             options={roleOptions}
                             value={selectedRole ? [selectedRole] : []}
-                            onChange={(value) => setValue('role', value as UserRole, { shouldValidate: true })}
+                            onChange={handleRoleChange}
                             error={errors.role?.message}
                             isMulti={false}
                         />
@@ -159,15 +173,17 @@ export default function EditUser({ isOpen, onClose, onSubmit, user }: EditUserPr
                                     />
                                 )}
 
-                                <SelectInput
-                                    label="Spécialités"
-                                    name="specialites"
-                                    options={specialityOptions}
-                                    value={selectedSpecialities || []}
-                                    onChange={handleSpecialitySelect}
-                                    error={errors.specialites?.message}
-                                    isMulti
-                                />
+                                {selectedRole === 'artisan' && (
+                                    <SelectInput
+                                        label="Spécialités"
+                                        name="specialites"
+                                        options={specialityOptions}
+                                        value={selectedSpecialities || []}
+                                        onChange={handleSpecialitySelect}
+                                        error={errors.specialites?.message}
+                                        isMulti
+                                    />
+                                )}
                             </>
                         )}
 

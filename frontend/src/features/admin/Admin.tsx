@@ -20,6 +20,7 @@ type UserWithRole = {
     };
     user_id: number;
     specialites: string[];
+    years_experience?: number;
 };
 
 export default function Admin() {
@@ -128,25 +129,59 @@ export default function Admin() {
     const handleEditUser = async (data: UserFormData) => {
         if (!editingUser) return;
 
-        setUsers((currentUsers) =>
-            currentUsers.map((user) => {
-                if (user.user_id === editingUser.user_id) {
-                    return {
-                        user: {
-                            ...user.user,
-                            firstName: data.firstName,
-                            lastName: data.lastName,
-                            email: data.email,
-                            role: data.role,
-                        },
-                        user_id: user.user_id,
-                        specialites: data.specialites || [],
-                    };
-                }
-                return user;
-            })
-        );
-        setEditingUser(null);
+        try {
+            console.log('Sending data:', {
+                ...data,
+                oldRole: editingUser.user.role,
+            });
+
+            const response = await fetch(`http://localhost:3000/api/users/${editingUser.user.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...data,
+                    oldRole: editingUser.user.role,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Erreur lors de la modification de l\'utilisateur');
+            }
+
+            // Mettre à jour l'état local
+            setUsers((currentUsers) =>
+                currentUsers.map((user) => {
+                    if (user.user.id === editingUser.user.id) {
+                        const updatedUser = {
+                            user: {
+                                ...user.user,
+                                id: editingUser.user.id,
+                                firstName: data.firstName,
+                                lastName: data.lastName,
+                                email: data.email,
+                                role: data.role,
+                            },
+                            user_id: editingUser.user.id,
+                            specialites: data.role === 'artisan' ? data.specialites || [] : [],
+                            years_experience: data.role === 'chef' ? data.years_experience || 0 : undefined,
+                        };
+                        console.log('Updated user:', updatedUser);
+                        return updatedUser;
+                    }
+                    return user;
+                })
+            );
+            setEditingUser(null);
+        } catch (error) {
+            console.error('Error editing user:', error);
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('Erreur lors de la modification de l\'utilisateur');
+        }
     };
 
     const handleDeleteUser = (userId: number) => {
