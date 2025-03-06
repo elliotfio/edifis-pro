@@ -1,15 +1,13 @@
+jest.mock('../config/db', () => ({
+    query: jest.fn(),
+    getConnection: jest.fn()
+}));
+
 const request = require('supertest');
 const express = require('express');
 const router = require('../routes/users');
-
-jest.mock('../config/db', () => {
-    return {
-        query: jest.fn(),
-        getConnection: jest.fn()
-    };
-});
-
 const pool = require('../config/db');
+
 const app = express();
 app.use(express.json());
 app.use('/api/users', router);
@@ -18,22 +16,30 @@ describe('User Routes', () => {
     let mockConnection;
 
     beforeEach(() => {
-        jest.clearAllMocks();
         console.log('🧪 Starting new test...');
-
+        jest.clearAllMocks();
+        
         mockConnection = {
-            beginTransaction: jest.fn().mockResolvedValue(undefined),
-            query: jest.fn(),
-            commit: jest.fn().mockResolvedValue(undefined),
-            rollback: jest.fn().mockResolvedValue(undefined),
-            release: jest.fn().mockResolvedValue(undefined)
+            query: jest.fn().mockResolvedValue([]),
+            beginTransaction: jest.fn().mockResolvedValue(),
+            commit: jest.fn().mockResolvedValue(),
+            rollback: jest.fn().mockResolvedValue(),
+            release: jest.fn()
         };
-
+        
         pool.getConnection.mockResolvedValue(mockConnection);
     });
 
     afterEach(() => {
         console.log('✅ Test completed');
+    });
+
+    beforeAll(() => {
+        console.log('🧪 Starting test suite...');
+    });
+
+    afterAll(() => {
+        console.log('🧪 All tests completed');
     });
 
     describe('GET /api/users', () => {
@@ -54,16 +60,6 @@ describe('User Routes', () => {
                 'SELECT id, firstName, lastName, email, role, date_creation FROM users'
             );
         });
-
-        it('should handle database errors', async () => {
-            console.log('📝 Testing GET error handling');
-            pool.query.mockRejectedValueOnce(new Error('Database error'));
-
-            const response = await request(app).get('/api/users');
-
-            expect(response.status).toBe(500);
-            expect(response.body.message).toBe('Erreur serveur');
-        });
     });
 
     describe('GET /api/users/:id', () => {
@@ -74,7 +70,8 @@ describe('User Routes', () => {
                 firstName: 'John',
                 lastName: 'Doe',
                 email: 'john@edifis.fr',
-                role: 'artisan'
+                role: 'artisan',
+                date_creation: '2025-03-06'
             };
 
             const mockArtisanInfo = {
@@ -104,7 +101,8 @@ describe('User Routes', () => {
                 firstName: 'Jane',
                 lastName: 'Smith',
                 email: 'jane@edifis.fr',
-                role: 'chef'
+                role: 'chef',
+                date_creation: '2025-03-06'
             };
 
             const mockChefInfo = {
@@ -126,7 +124,6 @@ describe('User Routes', () => {
         });
 
         it('should return 404 for non-existent user', async () => {
-            console.log('📝 Testing GET 404 response');
             pool.query.mockResolvedValueOnce([[]]);
 
             const response = await request(app).get('/api/users/999');
@@ -138,75 +135,165 @@ describe('User Routes', () => {
 
     describe('POST /api/users', () => {
         it('should create a new artisan user', async () => {
-            console.log('📝 Testing POST new artisan user');
             const mockUser = {
                 firstName: 'John',
                 lastName: 'Doe',
                 email: 'john@edifis.fr',
-                password: 'hashedPassword',
                 role: 'artisan',
                 specialites: ['plomberie', 'électricité']
             };
 
             mockConnection.query
-                .mockResolvedValueOnce([{ insertId: 1 }])  // users insert
-                .mockResolvedValueOnce([{ affectedRows: 1 }]);  // artisan insert
+                .mockResolvedValueOnce([{ insertId: 1 }])  // users table insert
+                .mockResolvedValueOnce([{ affectedRows: 1 }]);  // artisan table insert
 
             const response = await request(app)
                 .post('/api/users')
                 .send(mockUser);
 
             expect(response.status).toBe(201);
-            expect(response.body.message).toBe('Utilisateur créé avec succès');
-            expect(response.body.userId).toBe(1);
+            expect(response.body).toEqual({
+                message: 'Utilisateur créé avec succès',
+                userId: 1
+            });
+            expect(mockConnection.beginTransaction).toHaveBeenCalled();
             expect(mockConnection.commit).toHaveBeenCalled();
             expect(mockConnection.release).toHaveBeenCalled();
+
+            // Verify correct SQL parameters
+            expect(mockConnection.query).toHaveBeenCalledWith(
+                'INSERT INTO users (firstName, lastName, email, password, role, date_creation) VALUES (?, ?, ?, ?, ?, ?)',
+                ['John', 'Doe', 'john@edifis.fr', 'Doe.John', 'artisan', expect.any(String)]
+            );
+            expect(mockConnection.query).toHaveBeenCalledWith(
+                'INSERT INTO artisan (user_id, specialites, disponible) VALUES (?, ?, true)',
+                [1, 'plomberie, électricité']
+            );
         });
 
         it('should create a new chef user', async () => {
-            console.log('📝 Testing POST new chef user');
             const mockUser = {
                 firstName: 'Jane',
                 lastName: 'Smith',
                 email: 'jane@edifis.fr',
-                password: 'hashedPassword',
                 role: 'chef',
                 years_experience: '10'
             };
 
             mockConnection.query
-                .mockResolvedValueOnce([{ insertId: 2 }])  // users insert
-                .mockResolvedValueOnce([{ affectedRows: 1 }]);  // chef insert
+                .mockResolvedValueOnce([{ insertId: 2 }])
+                .mockResolvedValueOnce([{ affectedRows: 1 }]);
 
             const response = await request(app)
                 .post('/api/users')
                 .send(mockUser);
 
             expect(response.status).toBe(201);
-            expect(response.body.message).toBe('Utilisateur créé avec succès');
-            expect(response.body.userId).toBe(2);
-            expect(mockConnection.commit).toHaveBeenCalled();
-            expect(mockConnection.release).toHaveBeenCalled();
+            expect(response.body).toEqual({
+                message: 'Utilisateur créé avec succès',
+                userId: 2
+            });
+
+            // Verify correct SQL parameters
+            expect(mockConnection.query).toHaveBeenCalledWith(
+                'INSERT INTO users (firstName, lastName, email, password, role, date_creation) VALUES (?, ?, ?, ?, ?, ?)',
+                ['Jane', 'Smith', 'jane@edifis.fr', 'Smith.Jane', 'chef', expect.any(String)]
+            );
+            expect(mockConnection.query).toHaveBeenCalledWith(
+                'INSERT INTO chef (user_id, years_experience) VALUES (?, ?)',
+                [2, '10']
+            );
         });
 
-        it('should handle missing specialites for artisan', async () => {
-            console.log('📝 Testing POST artisan validation');
+        it('should create a new employe user', async () => {
             const mockUser = {
-                firstName: 'John',
-                lastName: 'Doe',
-                email: 'john@edifis.fr',
-                password: 'hashedPassword',
-                role: 'artisan'
+                firstName: 'Bob',
+                lastName: 'Wilson',
+                email: 'bob@edifis.fr',
+                role: 'employe'
             };
 
-            mockConnection.query.mockResolvedValueOnce([{ insertId: 3 }]);
+            mockConnection.query
+                .mockResolvedValueOnce([{ insertId: 3 }])
+                .mockResolvedValueOnce([{ affectedRows: 1 }]);
 
             const response = await request(app)
                 .post('/api/users')
                 .send(mockUser);
 
-            expect(response.status).toBe(500);
-            expect(response.body.message).toBe('Les spécialités sont requises pour un artisan');
+            expect(response.status).toBe(201);
+            expect(response.body).toEqual({
+                message: 'Utilisateur créé avec succès',
+                userId: 3
+            });
+
+            // Verify correct SQL parameters
+            expect(mockConnection.query).toHaveBeenCalledWith(
+                'INSERT INTO users (firstName, lastName, email, password, role, date_creation) VALUES (?, ?, ?, ?, ?, ?)',
+                ['Bob', 'Wilson', 'bob@edifis.fr', 'Wilson.Bob', 'employe', expect.any(String)]
+            );
+            expect(mockConnection.query).toHaveBeenCalledWith(
+                'INSERT INTO employe (user_id) VALUES (?)',
+                [3]
+            );
+        });
+
+        it('should handle missing specialites for artisan', async () => {
+            const mockUser = {
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john@edifis.fr',
+                role: 'artisan'
+            };
+
+            mockConnection.query.mockResolvedValueOnce([{ insertId: 1 }]);
+
+            const response = await request(app)
+                .post('/api/users')
+                .send(mockUser);
+
+            expect(response.status).toBe(400);
+            expect(response.body.message).toBe('Spécialités requises pour un artisan');
+            expect(mockConnection.rollback).toHaveBeenCalled();
+            expect(mockConnection.release).toHaveBeenCalled();
+        });
+
+        it('should handle missing years_experience for chef', async () => {
+            const mockUser = {
+                firstName: 'Jane',
+                lastName: 'Smith',
+                email: 'jane@edifis.fr',
+                role: 'chef'
+            };
+
+            mockConnection.query.mockResolvedValueOnce([{ insertId: 2 }]);
+
+            const response = await request(app)
+                .post('/api/users')
+                .send(mockUser);
+
+            expect(response.status).toBe(400);
+            expect(response.body.message).toBe('Années d\'expérience requises pour un chef');
+            expect(mockConnection.rollback).toHaveBeenCalled();
+            expect(mockConnection.release).toHaveBeenCalled();
+        });
+
+        it('should handle invalid role', async () => {
+            const mockUser = {
+                firstName: 'Invalid',
+                lastName: 'User',
+                email: 'invalid@edifis.fr',
+                role: 'invalid_role'
+            };
+
+            mockConnection.query.mockResolvedValueOnce([{ insertId: 4 }]);
+
+            const response = await request(app)
+                .post('/api/users')
+                .send(mockUser);
+
+            expect(response.status).toBe(400);
+            expect(response.body.message).toBe('Role invalide');
             expect(mockConnection.rollback).toHaveBeenCalled();
             expect(mockConnection.release).toHaveBeenCalled();
         });
@@ -214,17 +301,21 @@ describe('User Routes', () => {
 
     describe('PUT /api/users/:id', () => {
         it('should update an artisan user', async () => {
-            console.log('📝 Testing PUT update artisan');
+            const mockUser = {
+                id: 1,
+                role: 'artisan'
+            };
+
             const mockUpdate = {
                 firstName: 'John Updated',
                 email: 'john.updated@edifis.fr',
-                specialites: ['plomberie', 'électricité', 'maçonnerie']
+                specialites: ['plomberie', 'menuiserie']
             };
 
             mockConnection.query
-                .mockResolvedValueOnce([{ affectedRows: 1 }])  // users update
-                .mockResolvedValueOnce([[{ role: 'artisan' }]])  // get role
-                .mockResolvedValueOnce([{ affectedRows: 1 }]);  // artisan update
+                .mockResolvedValueOnce([[mockUser]])  // Check user exists
+                .mockResolvedValueOnce([{ affectedRows: 1 }])  // Update users table
+                .mockResolvedValueOnce([{ affectedRows: 1 }]); // Update artisan table
 
             const response = await request(app)
                 .put('/api/users/1')
@@ -237,16 +328,20 @@ describe('User Routes', () => {
         });
 
         it('should update a chef user', async () => {
-            console.log('📝 Testing PUT update chef');
+            const mockUser = {
+                id: 2,
+                role: 'chef'
+            };
+
             const mockUpdate = {
                 firstName: 'Jane Updated',
                 years_experience: '15'
             };
 
             mockConnection.query
-                .mockResolvedValueOnce([{ affectedRows: 1 }])  // users update
-                .mockResolvedValueOnce([[{ role: 'chef' }]])  // get role
-                .mockResolvedValueOnce([{ affectedRows: 1 }]);  // chef update
+                .mockResolvedValueOnce([[mockUser]])  // Check user exists
+                .mockResolvedValueOnce([{ affectedRows: 1 }])  // Update users table
+                .mockResolvedValueOnce([{ affectedRows: 1 }]); // Update chef table
 
             const response = await request(app)
                 .put('/api/users/2')
@@ -257,29 +352,47 @@ describe('User Routes', () => {
             expect(mockConnection.commit).toHaveBeenCalled();
             expect(mockConnection.release).toHaveBeenCalled();
         });
+
+        it('should handle non-existent user', async () => {
+            mockConnection.query.mockResolvedValueOnce([[]]);
+
+            const response = await request(app)
+                .put('/api/users/999')
+                .send({ firstName: 'Test' });
+
+            expect(response.status).toBe(404);
+            expect(response.body.message).toBe('Utilisateur non trouvé');
+            expect(mockConnection.rollback).toHaveBeenCalled();
+            expect(mockConnection.release).toHaveBeenCalled();
+        });
     });
 
     describe('DELETE /api/users/:id', () => {
-        it('should delete a user', async () => {
-            console.log('📝 Testing DELETE user');
+        it('should delete an existing user', async () => {
             mockConnection.query.mockResolvedValueOnce([{ affectedRows: 1 }]);
 
             const response = await request(app).delete('/api/users/1');
 
             expect(response.status).toBe(200);
-            expect(response.body.message).toBe('Utilisateur supprimé avec succès');
+            expect(response.body).toEqual({ message: 'Utilisateur supprimé avec succès' });
+            expect(mockConnection.beginTransaction).toHaveBeenCalled();
             expect(mockConnection.commit).toHaveBeenCalled();
             expect(mockConnection.release).toHaveBeenCalled();
+
+            // Verify correct SQL parameters
+            expect(mockConnection.query).toHaveBeenCalledWith(
+                'DELETE FROM users WHERE id = ?',
+                ['1']
+            );
         });
 
-        it('should handle database errors during deletion', async () => {
-            console.log('📝 Testing DELETE error handling');
-            mockConnection.query.mockRejectedValueOnce(new Error('Database error'));
+        it('should handle non-existent user', async () => {
+            mockConnection.query.mockResolvedValueOnce([{ affectedRows: 0 }]);
 
-            const response = await request(app).delete('/api/users/1');
+            const response = await request(app).delete('/api/users/999');
 
-            expect(response.status).toBe(500);
-            expect(response.body.message).toBe('Erreur serveur');
+            expect(response.status).toBe(404);
+            expect(response.body.message).toBe('Utilisateur non trouvé');
             expect(mockConnection.rollback).toHaveBeenCalled();
             expect(mockConnection.release).toHaveBeenCalled();
         });

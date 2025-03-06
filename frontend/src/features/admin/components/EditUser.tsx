@@ -7,12 +7,22 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { HardHat, Mail, User, UserCog } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { userSchema, UserFormData } from '@/validators/userValidator';
+import { useEffect } from 'react';
 
 interface EditUserProps {
     isOpen: boolean;
     onClose: () => void;
-    onEdit: (data: UserFormData) => void;
-    initialData: UserFormData;
+    onSubmit: (data: UserFormData) => void;
+    user: {
+        user: {
+            firstName: string;
+            lastName: string;
+            email: string;
+            role: string;
+        };
+        specialites?: string[];
+        years_experience?: number;
+    };
 }
 
 const specialityOptions = WORKSITE_SPECIALITIES.map((speciality) => ({
@@ -27,7 +37,7 @@ const roleOptions = [
     { label: 'Administrateur', value: 'admin' },
 ];
 
-export default function EditUser({ isOpen, onClose, onEdit, initialData }: EditUserProps) {
+export default function EditUser({ isOpen, onClose, onSubmit, user }: EditUserProps) {
     const {
         register,
         handleSubmit,
@@ -37,7 +47,14 @@ export default function EditUser({ isOpen, onClose, onEdit, initialData }: EditU
         setError,
     } = useForm<UserFormData>({
         resolver: zodResolver(userSchema),
-        defaultValues: initialData,
+        defaultValues: {
+            firstName: user.user.firstName,
+            lastName: user.user.lastName,
+            email: user.user.email,
+            role: user.user.role as UserRole,
+            specialites: user.specialites || [],
+            years_experience: user.years_experience,
+        },
     });
 
     const selectedRole = watch('role');
@@ -54,15 +71,15 @@ export default function EditUser({ isOpen, onClose, onEdit, initialData }: EditU
         } else {
             setValue(
                 'specialites',
-                [...currentSpecialities, speciality],
+                [...currentSpecialities, speciality as WorksiteSpeciality],
                 { shouldValidate: true }
             );
         }
     };
 
-    const onSubmit = async (data: UserFormData) => {
+    const onSubmitForm = async (data: UserFormData) => {
         try {
-            await onEdit(data);
+            await onSubmit(data);
             onClose();
         } catch (error) {
             if (error instanceof Error) {
@@ -89,12 +106,7 @@ export default function EditUser({ isOpen, onClose, onEdit, initialData }: EditU
                     </h2>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmit(onSubmit)();
-                    }
-                }}>
+                <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div>

@@ -6,7 +6,6 @@ import UsersList from './components/UsersList';
 import AddUser from './components/AddUser';
 import EditUser from './components/EditUser';
 import { UserFormData } from '@/validators/userValidator';
-import axios from 'axios';
 
 type SortDirection = 'asc' | 'desc' | null;
 
@@ -30,7 +29,6 @@ export default function Admin() {
     const [users, setUsers] = useState<UserWithRole[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [deleteModalUser, setDeleteModalUser] = useState<UserWithRole | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
 
@@ -87,32 +85,22 @@ export default function Admin() {
         }
     };
 
-    const handleDeleteClick = (user: UserWithRole) => {
-        setDeleteModalUser(user);
-    };
-
-    const handleEditClick = (user: UserWithRole) => {
-        setEditingUser(user);
-    };
-
-    const handleDeleteConfirm = () => {
-        if (deleteModalUser) {
-            setUsers((currentUsers) =>
-                currentUsers.filter((user) => user.user_id !== deleteModalUser.user_id)
-            );
-            setDeleteModalUser(null);
-        }
-    };
-
     const handleAddUser = async (data: UserFormData) => {
         try {
-            const response = await axios.post('http://localhost:3000/api/users', data);
+            const response = await fetch('http://localhost:3000/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
             
-            if (!response.data) {
-                throw new Error('Erreur lors de l\'ajout de l\'utilisateur');
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Erreur lors de l\'ajout de l\'utilisateur');
             }
 
-            const result = response.data;
+            const result = await response.json();
             
             const newUser: UserWithRole = {
                 user: {
@@ -130,10 +118,10 @@ export default function Admin() {
             setUsers((currentUsers) => [...currentUsers, newUser]);
             setIsAddModalOpen(false);
         } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                throw new Error(error.response.data.message || 'Erreur lors de l\'ajout de l\'utilisateur');
+            if (error instanceof Error) {
+                throw error;
             }
-            throw error;
+            throw new Error('Erreur lors de l\'ajout de l\'utilisateur');
         }
     };
 
@@ -159,6 +147,10 @@ export default function Admin() {
             })
         );
         setEditingUser(null);
+    };
+
+    const handleDeleteUser = (userId: number) => {
+        setUsers(currentUsers => currentUsers.filter(user => user.user.id !== userId));
     };
 
     const filteredData = useMemo(() => {
@@ -225,8 +217,8 @@ export default function Admin() {
                 onSort={handleSort}
                 sortColumn={sortColumn}
                 sortDirection={sortDirection}
-                onDeleteClick={handleDeleteClick}
-                onEditClick={handleEditClick}
+                onDelete={handleDeleteUser}
+                onEditClick={setEditingUser}
                 isLoading={isLoading}
             />
 
