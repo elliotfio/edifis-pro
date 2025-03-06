@@ -1,3 +1,5 @@
+import { useLogout } from '@/api/queries/authQueries';
+import { useAuthStore } from '@/stores/authStore';
 import { useLayoutStore } from '@/stores/layoutStore';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -17,14 +19,23 @@ interface SidebarSection {
     items: {
         icon: React.ReactNode;
         label: string;
-        href: string;
+        href?: string;
+        onClick?: () => void;
         color?: string;
     }[];
 }
 
 export default function Sidebar() {
     const { isExpanded, toggleSidebar } = useLayoutStore();
+    const { user } = useAuthStore();
     const location = useLocation();
+    const { mutate: logout } = useLogout();
+
+    const handleLogout = () => {
+        logout();
+    };
+
+    console.log(user)
 
     const mainSections: SidebarSection[] = [
         {
@@ -58,13 +69,14 @@ export default function Sidebar() {
             {
                 icon: <LogOut size={20} />,
                 label: 'Déconnexion',
-                href: '/logout',
+                onClick: handleLogout,
                 color: 'text-red-500',
             },
         ],
     };
 
-    const isLinkActive = (href: string) => {
+    const isLinkActive = (href?: string) => {
+        if (!href) return false;
         if (href === '/worksites' && location.pathname.startsWith('/worksite/')) {
             return true;
         }
@@ -91,62 +103,124 @@ export default function Sidebar() {
             <nav className="space-y-1">
                 {section.items.map((item) => {
                     const isActive = isLinkActive(item.href);
-                    return (
-                        <Link
-                            key={item.label}
-                            to={item.href}
-                            className="flex items-center gap-3 text-gray-500 rounded-lg p-2 transition-colors group relative"
-                        >
-                            <AnimatePresence mode="wait">
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="activeBackground"
-                                        className="absolute inset-0 bg-secondary rounded-lg"
-                                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                    />
-                                )}
-                            </AnimatePresence>
-                            <motion.span
-                                animate={{
-                                    color: isActive ? 'rgb(93, 106, 189)' : 'rgb(156, 163, 175)',
-                                }}
-                                transition={{ duration: 0.2, delay: isActive ? 0.1 : 0 }}
-                                className="relative z-10 flex-shrink-0"
+
+                    if (item.href) {
+                        return (
+                            <Link
+                                key={item.label}
+                                to={item.href}
+                                className={`flex items-center gap-3 text-gray-500 rounded-lg p-2 transition-colors group relative w-full ${
+                                    item.color || ''
+                                }`}
                             >
-                                {item.icon}
-                            </motion.span>
-                            <AnimatePresence>
-                                {isExpanded && (
-                                    <motion.span
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{
-                                            opacity: 1,
-                                            x: 0,
-                                            color: isActive
-                                                ? 'rgb(93, 106, 189)'
-                                                : 'rgb(75, 85, 99)',
-                                        }}
-                                        exit={{ opacity: 0, x: -10 }}
-                                        transition={{
-                                            duration: 0.2,
-                                            delay: isActive ? 0.1 : 0,
-                                            color: { delay: isActive ? 0.1 : 0 },
-                                        }}
-                                        className="relative z-10 text-sm whitespace-nowrap"
-                                    >
-                                        {item.label}
-                                    </motion.span>
-                                )}
-                            </AnimatePresence>
-                        </Link>
-                    );
+                                <AnimatePresence mode="wait">
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activeBackground"
+                                            className="absolute inset-0 bg-secondary rounded-lg"
+                                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                        />
+                                    )}
+                                </AnimatePresence>
+                                <motion.span
+                                    animate={{
+                                        color: isActive ? 'rgb(93, 106, 189)' : 'currentColor',
+                                    }}
+                                    transition={{ duration: 0.2, delay: isActive ? 0.1 : 0 }}
+                                    className="relative z-10 flex-shrink-0"
+                                >
+                                    {item.icon}
+                                </motion.span>
+                                <AnimatePresence>
+                                    {isExpanded && (
+                                        <motion.span
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{
+                                                opacity: 1,
+                                                x: 0,
+                                                color: isActive
+                                                    ? 'rgb(93, 106, 189)'
+                                                    : 'currentColor',
+                                            }}
+                                            exit={{ opacity: 0, x: -10 }}
+                                            transition={{
+                                                duration: 0.2,
+                                                delay: isActive ? 0.1 : 0,
+                                                color: { delay: isActive ? 0.1 : 0 },
+                                            }}
+                                            className="relative z-10 text-sm whitespace-nowrap"
+                                        >
+                                            {item.label}
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
+                            </Link>
+                        );
+                    } else {
+                        return (
+                            <button
+                                key={item.label}
+                                onClick={item.onClick}
+                                className={`flex items-center gap-3 text-gray-500 rounded-lg p-2 transition-colors group relative w-full ${
+                                    item.color || ''
+                                }`}
+                            >
+                                <AnimatePresence mode="wait">
+                                    {isLinkActive(item.href) && (
+                                        <motion.div
+                                            layoutId="activeBackground"
+                                            className="absolute inset-0 bg-secondary rounded-lg"
+                                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                        />
+                                    )}
+                                </AnimatePresence>
+                                <motion.span
+                                    animate={{
+                                        color: isLinkActive(item.href) ? 'rgb(93, 106, 189)' : 'currentColor',
+                                    }}
+                                    transition={{ duration: 0.2, delay: isLinkActive(item.href) ? 0.1 : 0 }}
+                                    className="relative z-10 flex-shrink-0"
+                                >
+                                    {item.icon}
+                                </motion.span>
+                                <AnimatePresence>
+                                    {isExpanded && (
+                                        <motion.span
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{
+                                                opacity: 1,
+                                                x: 0,
+                                                color: isLinkActive(item.href)
+                                                    ? 'rgb(93, 106, 189)'
+                                                    : 'currentColor',
+                                            }}
+                                            exit={{ opacity: 0, x: -10 }}
+                                            transition={{
+                                                duration: 0.2,
+                                                delay: isLinkActive(item.href) ? 0.1 : 0,
+                                                color: { delay: isLinkActive(item.href) ? 0.1 : 0 },
+                                            }}
+                                            className="relative z-10 text-sm whitespace-nowrap"
+                                        >
+                                            {item.label}
+                                        </motion.span>
+                                    )}
+                                </AnimatePresence>
+                            </button>
+                        );
+                    }
                 })}
             </nav>
         </div>
     );
+
+    const userInitials = user ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : '?';
 
     return (
         <motion.aside
@@ -169,18 +243,20 @@ export default function Sidebar() {
             {/* Profile Section */}
             <div className="px-4 flex items-center gap-4 pb-4 mb-4 border-b">
                 <div className="w-10 h-10 rounded-full bg-secondary overflow-hidden flex-shrink-0 flex items-center justify-center">
-                    <p className="text-primary font-semibold">R</p>
+                    <p className="text-primary font-semibold">{userInitials}</p>
                 </div>
                 <AnimatePresence>
-                    {isExpanded && (
+                    {isExpanded && user && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="flex flex-col"
                         >
-                            <span className="font-medium text-gray-900">Raph</span>
-                            <span className="text-xs text-gray-500">raph@raph.raph</span>
+                            <span className="font-medium text-gray-900">
+                                {user.firstName} {user.lastName}
+                            </span>
+                            <span className="text-xs text-gray-500">{user.email}</span>
                         </motion.div>
                     )}
                 </AnimatePresence>

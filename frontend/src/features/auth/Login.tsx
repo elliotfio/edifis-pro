@@ -24,9 +24,14 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      loginUser(data);
+      await new Promise((resolve, reject) => {
+        loginUser(data, {
+          onSuccess: () => resolve(true),
+          onError: (error) => reject(error),
+        });
+      });
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   }
 
@@ -83,4 +88,3 @@ export default function Login() {
 
   )
 }
-

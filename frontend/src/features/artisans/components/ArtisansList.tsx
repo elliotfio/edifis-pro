@@ -95,11 +95,15 @@ export default function ArtisansList({
                                 {formatDateToDDMMYYYY(artisan.user.date_creation)}
                             </TableCell>
                             <TableCell>
-                                {artisan.specialites[0].charAt(0).toUpperCase() +
-                                    artisan.specialites[0].slice(1)}
-                                {artisan.specialites.length > 1 && ', '}
-                                {artisan.specialites[1].charAt(0).toUpperCase() +
-                                    artisan.specialites[1].slice(1)}
+                                {artisan.specialites[0]?.charAt(0).toUpperCase() +
+                                    artisan.specialites[0]?.slice(1)}
+                                {artisan.specialites.length > 1 && (
+                                    <>
+                                        {', '}
+                                        {artisan.specialites[1]?.charAt(0).toUpperCase() +
+                                            artisan.specialites[1]?.slice(1)}
+                                    </>
+                                )}
                             </TableCell>
                             <TableCell>
                                 <span

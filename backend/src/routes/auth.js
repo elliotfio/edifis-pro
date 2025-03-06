@@ -1,26 +1,33 @@
+require('dotenv').config();
+
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db'); 
 const verifyToken = require('../middleware/jwtAuth');
-require('dotenv').config();
 
 const router = express.Router();
 
+// Vérification des variables d'environnement JWT
+if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+    console.error("❌ Erreur: JWT_SECRET et/ou JWT_REFRESH_SECRET non définis");
+    process.exit(1);
+}
+
 // Générer un token d'accès et un refresh token
 const generateTokens = (user) => {
-    const accessToken = jwt.sign(
+    const access_token = jwt.sign(
         { id: user.id, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: '15m' }
     );
 
-    const refreshToken = jwt.sign(
+    const refresh_token = jwt.sign(
         { id: user.id },
         process.env.JWT_REFRESH_SECRET,
         { expiresIn: '7d' }
     );
-    return { accessToken, refreshToken };
+    return { access_token, refresh_token };
 };
 
 router.post('/register', async (req, res) => {
@@ -60,29 +67,35 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
+    console.log("Tentative de connexion pour:", email);
+
     if (!email || !password) {
         return res.status(400).json({ message: 'Email et mot de passe requis' });
     }
 
     try {
+        console.log("Recherche de l'utilisateur...");
         const [[user]] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+        console.log("Utilisateur trouvé:", user ? "Oui" : "Non");
 
         if (!user) {
             return res.status(401).json({ message: 'Identifiants incorrects' });
         }
 
-        // Vérification du mot de passe avec bcrypt
+        console.log("Vérification du mot de passe...");
         const isPasswordValid = await bcrypt.compare(password, user.password);
+        console.log("Mot de passe valide:", isPasswordValid ? "Oui" : "Non");
+
         if (!isPasswordValid) {
             return res.status(401).json({ message: 'Identifiants incorrects' });
         }
 
-        // Génération des tokens
+        console.log("Génération des tokens...");
         const tokens = generateTokens(user);
 
-        // Sécuriser la réponse en supprimant le mot de passe
         if (user) {
             const { password: _, ...userWithoutPassword } = user;
+            console.log("Connexion réussie pour l'utilisateur:", userWithoutPassword.email);
             res.status(200).json({
                 message: 'Connexion réussie !',
                 user: userWithoutPassword,
@@ -93,7 +106,8 @@ router.post('/login', async (req, res) => {
         }
 
     } catch (err) {
-        console.error("❌ Erreur lors de la connexion:", err);
+        console.error("❌ Erreur détaillée lors de la connexion:", err.message);
+        console.error("❌ Stack trace:", err.stack);
         res.status(500).json({ message: 'Erreur serveur, veuillez réessayer plus tard' });
     }
 });

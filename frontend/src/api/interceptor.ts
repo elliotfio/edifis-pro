@@ -3,11 +3,10 @@ import { AuthResponse } from '@/types';
 
 class Interceptor {
     private url: string;
-    private isRefreshing: boolean = false; // Empêche les boucles infinies
+    private isRefreshing: boolean = false;
     private refreshFailed: boolean = false;
 
     constructor() {
-
         this.url = import.meta.env.VITE_API_BASE_URL as string;
     }
 
@@ -32,7 +31,6 @@ class Interceptor {
         return headers;
     }
 
-    // Gestion des erreurs 401 et retry
     private async handleUnauthorizedRequest(
         response: Response,
         retryRequest: () => Promise<Response>
@@ -41,17 +39,16 @@ class Interceptor {
             const refreshToken = Cookies.get("refresh_token");
     
             if (this.isRefreshing || this.refreshFailed || !refreshToken) {
-                // Si un refresh est déjà en cours ou a échoué, on ne tente pas à nouveau
                 return response;
             }
     
             this.isRefreshing = true;
     
             try {
-                const newToken = await this.getNewAccessToken(refreshToken);
+                const newTokens = await this.getNewAccessToken(refreshToken);
                 this.isRefreshing = false;
     
-                if (newToken && newToken.access_token) {
+                if (newTokens && newTokens.access_token) {
                     return retryRequest();
                 } else {
                     throw new Error("Le refresh token est invalide");
@@ -67,9 +64,7 @@ class Interceptor {
     
         return response;
     }
-    
 
-    // Fonction générique pour gérer toutes les requêtes HTTP
     public async fetchRequest(
         endpoint: string,
         method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
@@ -111,23 +106,21 @@ class Interceptor {
             throw new Error(error.message || "Une erreur est survenue lors de la requête");
         }
     }
-    
 
-    // Récupération d'un nouveau token via le refresh token
-    public async getNewAccessToken(refresh_token: string): Promise<AuthResponse | null> {
+    public async getNewAccessToken(refreshToken: string): Promise<AuthResponse | null> {
         try {
-            const response = await this.fetchRequest("/api/auth/refresh", "POST", { token: refresh_token });
+            const response = await this.fetchRequest("/api/auth/refresh-token", "POST", { refreshToken });
 
-            if (response.token) {
-                Cookies.set("access_token", response.token, { expires: 1 }); // expire dans 1 jour
+            if (response.accessToken) {
+                Cookies.set("access_token", response.accessToken, { expires: 1 });
             }
 
-            if (response.refresh_token) {
-                Cookies.set("refresh_token", response.refresh_token, { expires: 30 }); // expire dans 30 jours
+            if (response.refreshToken) {
+                Cookies.set("refresh_token", response.refreshToken, { expires: 7 });
             }
 
-            this.refreshFailed = false; // Reset l'état si le refresh fonctionne
-            return response || null;
+            this.refreshFailed = false;
+            return response;
         } catch (error) {
             console.error("Échec du rafraîchissement du token, déconnexion...");
             this.logoutUser();
