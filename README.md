@@ -4,9 +4,6 @@
 
 EDIFIS est une solution complète de gestion pour les entreprises du BTP, conçue pour simplifier et optimiser tous les aspects de la gestion de chantiers. Notre plateforme permet aux artisans, chefs de chantier et personnel administratif de collaborer efficacement sur un même outil.
 
-### Vision
-
-Notre vision est de digitaliser le secteur du BTP en proposant une solution intuitive qui répond aux besoins spécifiques des différents acteurs du secteur. EDIFIS vise à réduire la charge administrative, optimiser la planification des ressources et améliorer la communication entre les équipes sur le terrain et au bureau.
 
 ### Public cible
 
