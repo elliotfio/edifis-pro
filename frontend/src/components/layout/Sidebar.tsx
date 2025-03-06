@@ -35,35 +35,59 @@ export default function Sidebar() {
         logout();
     };
 
+    // Fonction pour vérifier les permissions selon le rôle
+    const hasAccess = (requiredRoles: string[]) => {
+        if (!user || !user.role) return false;
+        return requiredRoles.includes(user.role);
+    };
+
     const mainSections: SidebarSection[] = [
         {
             title: 'LISTES',
             items: [
                 { icon: <TrafficCone size={20} />, label: 'Chantiers', href: '/worksites' },
-                { icon: <Pickaxe size={20} />, label: 'Artisans', href: '/artisans' },
+                ...(hasAccess(['admin', 'employé', 'chef'])
+                    ? [{ icon: <Pickaxe size={20} />, label: 'Artisans', href: '/artisans' }]
+                    : []),
             ],
         },
         {
             title: 'ADMINISTRATIF',
             items: [
-                {
-                    icon: <CalendarDays size={20} />,
-                    label: 'Planification',
-                    href: '/planification',
-                },
-                { icon: <LayoutDashboard size={20} />, label: 'Dashboard', href: '/dashboard' },
+                ...(hasAccess(['admin', 'employé', 'chef'])
+                    ? [
+                          {
+                              icon: <CalendarDays size={20} />,
+                              label: 'Planification',
+                              href: '/planification',
+                          },
+                          {
+                              icon: <LayoutDashboard size={20} />,
+                              label: 'Dashboard',
+                              href: '/dashboard',
+                          },
+                      ]
+                    : []),
             ],
         },
-        {
-            title: 'ADMIN',
-            items: [{ icon: <ShieldBan size={20} />, label: 'Gestion admin', href: '/admin' }],
-        },
-    ];
+        ...(hasAccess(['admin'])
+            ? [
+                  {
+                      title: 'ADMIN',
+                      items: [
+                          { icon: <ShieldBan size={20} />, label: 'Gestion admin', href: '/admin' },
+                      ],
+                  },
+              ]
+            : []),
+    ].filter((section) => section.items.length > 0); // Filtrer les sections vides
 
     const bottomSection: SidebarSection = {
         title: 'PERSONNEL',
         items: [
-            { icon: <Settings size={20} />, label: 'Settings', href: '/settings' },
+            ...(hasAccess(['admin'])
+                ? [{ icon: <Settings size={20} />, label: 'Settings', href: '/settings' }]
+                : []),
             {
                 icon: <LogOut size={20} />,
                 label: 'Déconnexion',
@@ -116,7 +140,11 @@ export default function Sidebar() {
                                         <motion.div
                                             layoutId="activeBackground"
                                             className="absolute inset-0 bg-secondary rounded-lg"
-                                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                            transition={{
+                                                type: 'spring',
+                                                stiffness: 400,
+                                                damping: 30,
+                                            }}
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
@@ -171,7 +199,11 @@ export default function Sidebar() {
                                         <motion.div
                                             layoutId="activeBackground"
                                             className="absolute inset-0 bg-secondary rounded-lg"
-                                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                            transition={{
+                                                type: 'spring',
+                                                stiffness: 400,
+                                                damping: 30,
+                                            }}
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
@@ -180,9 +212,14 @@ export default function Sidebar() {
                                 </AnimatePresence>
                                 <motion.span
                                     animate={{
-                                        color: isLinkActive(item.href) ? 'rgb(93, 106, 189)' : 'currentColor',
+                                        color: isLinkActive(item.href)
+                                            ? 'rgb(93, 106, 189)'
+                                            : 'currentColor',
                                     }}
-                                    transition={{ duration: 0.2, delay: isLinkActive(item.href) ? 0.1 : 0 }}
+                                    transition={{
+                                        duration: 0.2,
+                                        delay: isLinkActive(item.href) ? 0.1 : 0,
+                                    }}
                                     className="relative z-10 flex-shrink-0"
                                 >
                                     {item.icon}

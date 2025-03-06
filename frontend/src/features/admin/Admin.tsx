@@ -43,7 +43,7 @@ export default function Admin() {
                     throw new Error('Erreur lors de la récupération des utilisateurs');
                 }
                 const data = await response.json();
-                
+
                 const formattedUsers: UserWithRole[] = data.map((user: any) => ({
                     user: {
                         id: user.id,
@@ -51,10 +51,10 @@ export default function Admin() {
                         lastName: user.lastName,
                         email: user.email,
                         role: user.role,
-                        date_creation: user.date_creation || new Date().toISOString()
+                        date_creation: user.date_creation || new Date().toISOString(),
                     },
                     user_id: user.id,
-                    specialites: [] 
+                    specialites: [],
                 }));
 
                 setUsers(formattedUsers);
@@ -95,14 +95,14 @@ export default function Admin() {
                 },
                 body: JSON.stringify(data),
             });
-            
+
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Erreur lors de l\'ajout de l\'utilisateur');
+                throw new Error(error.message || "Erreur lors de l'ajout de l'utilisateur");
             }
 
             const result = await response.json();
-            
+
             const newUser: UserWithRole = {
                 user: {
                     id: result.userId,
@@ -122,7 +122,7 @@ export default function Admin() {
             if (error instanceof Error) {
                 throw error;
             }
-            throw new Error('Erreur lors de l\'ajout de l\'utilisateur');
+            throw new Error("Erreur lors de l'ajout de l'utilisateur");
         }
     };
 
@@ -143,7 +143,7 @@ export default function Admin() {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Erreur lors de la modification de l\'utilisateur');
+                throw new Error(error.message || "Erreur lors de la modification de l'utilisateur");
             }
 
             // Mettre à jour l'état local
@@ -161,7 +161,8 @@ export default function Admin() {
                             },
                             user_id: editingUser.user.id,
                             specialites: data.role === 'artisan' ? data.specialites || [] : [],
-                            years_experience: data.role === 'chef' ? data.years_experience || 0 : undefined,
+                            years_experience:
+                                data.role === 'chef' ? data.years_experience || 0 : undefined,
                         };
                         return updatedUser;
                     }
@@ -174,12 +175,12 @@ export default function Admin() {
             if (error instanceof Error) {
                 throw error;
             }
-            throw new Error('Erreur lors de la modification de l\'utilisateur');
+            throw new Error("Erreur lors de la modification de l'utilisateur");
         }
     };
 
     const handleDeleteUser = (userId: number) => {
-        setUsers(currentUsers => currentUsers.filter(user => user.user.id !== userId));
+        setUsers((currentUsers) => currentUsers.filter((user) => user.user.id !== userId));
     };
 
     const filteredData = useMemo(() => {
@@ -197,6 +198,14 @@ export default function Admin() {
                     case 'email':
                         compareA = a.user.email.toLowerCase();
                         compareB = b.user.email.toLowerCase();
+                        break;
+                    case 'date_creation':
+                        compareA = new Date(a.user.date_creation).getTime();
+                        compareB = new Date(b.user.date_creation).getTime();
+                        break;
+                    case 'role':
+                        compareA = a.user.role.toLowerCase();
+                        compareB = b.user.role.toLowerCase();
                         break;
                     default:
                         return 0;

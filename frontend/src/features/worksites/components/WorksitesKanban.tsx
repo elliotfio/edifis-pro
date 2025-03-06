@@ -9,26 +9,26 @@ interface WorksitesKanbanProps {
 
 // Mapping des statuts aux colonnes
 const STATUS_MAPPING = {
-    'no_attributed': 'Non Attribué',
-    'attributed': 'Attribué',
-    'planned': 'Planifié',
-    'in_progress': 'En cours',
-    'completed': 'Terminé',
-    'archived': 'Archivé',
-    'cancelled': 'Annulé',
-    'blocked': 'Bloqué'
+    no_attributed: 'Non Attribué',
+    attributed: 'Attribué',
+    planned: 'Planifié',
+    in_progress: 'En cours',
+    completed: 'Terminé',
+    archived: 'Archivé',
+    cancelled: 'Annulé',
+    blocked: 'Bloqué',
 } as const;
 
 // Couleurs pour chaque colonne
 const columnColors: { [key: string]: string } = {
     'Non Attribué': '#f3f4f6',
-    'Attribué': '#FFF8E1',
-    'Planifié': '#F3E5F5',
+    Attribué: '#FFF8E1',
+    Planifié: '#F3E5F5',
     'En cours': '#E3F2FD',
-    'Terminé': '#E0F2F1',
-    'Archivé': '#FFEBEE',
-    'Annulé': '#FCE4EC',
-    'Bloqué': '#fef9c2' 
+    Terminé: '#E0F2F1',
+    Archivé: '#FFEBEE',
+    Annulé: '#FCE4EC',
+    Bloqué: '#fef9c2',
 };
 
 export default function Kanban({ data }: WorksitesKanbanProps) {
@@ -62,13 +62,14 @@ export default function Kanban({ data }: WorksitesKanbanProps) {
     const scroll = (direction: 'left' | 'right') => {
         if (scrollContainerRef.current) {
             const scrollAmount = 300;
-            const newScrollLeft = direction === 'left' 
-                ? scrollContainerRef.current.scrollLeft - scrollAmount
-                : scrollContainerRef.current.scrollLeft + scrollAmount;
-            
+            const newScrollLeft =
+                direction === 'left'
+                    ? scrollContainerRef.current.scrollLeft - scrollAmount
+                    : scrollContainerRef.current.scrollLeft + scrollAmount;
+
             scrollContainerRef.current.scrollTo({
                 left: newScrollLeft,
-                behavior: 'smooth'
+                behavior: 'smooth',
             });
         }
     };
@@ -76,18 +77,20 @@ export default function Kanban({ data }: WorksitesKanbanProps) {
     // Grouper les worksites par statut
     const initialKanbanData = Object.values(STATUS_MAPPING).reduce((acc, columnName) => {
         acc[columnName] = data
-            .filter(worksite => {
-                const statusInFrench = STATUS_MAPPING[worksite.status as keyof typeof STATUS_MAPPING];
+            .filter((worksite) => {
+                const statusInFrench =
+                    STATUS_MAPPING[worksite.status as keyof typeof STATUS_MAPPING];
                 return statusInFrench === columnName;
             })
-            .map(worksite => ({
+            .map((worksite) => ({
                 id: parseInt(worksite.id),
                 name: worksite.name,
                 address: worksite.address,
-                date: worksite.startDate
+                date: worksite.startDate,
+                budget: worksite.budget?.toString(),
             }));
         return acc;
-    }, {} as { [key: string]: { id: number; name: string; address: string; date: string; }[] });
+    }, {} as { [key: string]: { id: number; name: string; address: string; date: string; budget?: string }[] });
 
     const [sortedData] = useState(initialKanbanData);
     const columnEntries = Object.entries(sortedData);
@@ -95,15 +98,15 @@ export default function Kanban({ data }: WorksitesKanbanProps) {
     return (
         <div className="relative">
             {canScrollLeft && (
-                <button 
+                <button
                     onClick={() => scroll('left')}
                     className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-primary rounded-full p-2 shadow-lg hover:bg-primary/90 transition-colors"
                 >
-                    <ChevronLeft size={24} color='white' />
+                    <ChevronLeft size={24} color="white" />
                 </button>
             )}
 
-            <div 
+            <div
                 ref={scrollContainerRef}
                 className="flex gap-0 overflow-x-auto pt-0 max-w-[80vw] scroll-smooth"
             >
@@ -111,25 +114,37 @@ export default function Kanban({ data }: WorksitesKanbanProps) {
                     <div
                         key={status}
                         className={`w-full min-w-[300px] ${
-                            index === 0 ? 'pr-2' : 
-                            index === columnEntries.length - 1 ? 'pl-2' : 'px-2'
+                            index === 0
+                                ? 'pr-2'
+                                : index === columnEntries.length - 1
+                                ? 'pl-2'
+                                : 'px-2'
                         }`}
                     >
-                        <div className="flex justify-between items-center mb-3 px-4 py-2 rounded-md" style={{ backgroundColor: columnColors[status] }}>
+                        <div
+                            className="flex justify-between items-center mb-3 px-4 py-2 rounded-md"
+                            style={{ backgroundColor: columnColors[status] }}
+                        >
                             <h3 className="font-semibold text-gray-800">{status}</h3>
                             <div className="w-8 h-4 rounded-full border border-black text-[.5rem] relative font-medium">
-                                <span className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'>{worksite.length}</span>
+                                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                                    {worksite.length}
+                                </span>
                             </div>
                         </div>
 
                         <div className="space-y-3">
                             {worksite.length > 0 ? (
                                 worksite.map((worksite) => (
-                                    <div key={worksite.id.toString()} className="transition-transform">
+                                    <div
+                                        key={worksite.id.toString()}
+                                        className="transition-transform"
+                                    >
                                         <ContactCard
                                             name={worksite.name}
                                             address={worksite.address}
                                             date={worksite.date}
+                                            budget={worksite.budget || '0'}
                                         />
                                     </div>
                                 ))
@@ -145,11 +160,11 @@ export default function Kanban({ data }: WorksitesKanbanProps) {
             </div>
 
             {canScrollRight && (
-                <button 
+                <button
                     onClick={() => scroll('right')}
                     className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-primary rounded-full p-2 shadow-lg hover:bg-primary/90 transition-colors"
                 >
-                    <ChevronRight size={24} color='white' />
+                    <ChevronRight size={24} color="white" />
                 </button>
             )}
         </div>

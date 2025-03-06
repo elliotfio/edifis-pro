@@ -43,24 +43,24 @@ export default function ChefsList({
                     <TableRow>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'nom' ? sortDirection : null}
-                            onClick={() => onSort('nom')}
+                            sortDirection={sortColumn === 'firstName' ? sortDirection : null}
+                            onClick={() => onSort('firstName')}
                             className="w-[20%]"
                         >
                             NOM
                         </TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'adresse' ? sortDirection : null}
-                            onClick={() => onSort('adresse')}
+                            sortDirection={sortColumn === 'email' ? sortDirection : null}
+                            onClick={() => onSort('email')}
                             className="w-[25%]"
                         >
                             ADRESSE
                         </TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'date_arrivee' ? sortDirection : null}
-                            onClick={() => onSort('date_arrivee')}
+                            sortDirection={sortColumn === 'date_creation' ? sortDirection : null}
+                            onClick={() => onSort('date_creation')}
                             className="w-[14%]"
                         >
                             DATE D'ARRIVÉE
@@ -75,8 +75,8 @@ export default function ChefsList({
                         </TableHead>
                         <TableHead
                             sortable
-                            sortDirection={sortColumn === 'status' ? sortDirection : null}
-                            onClick={() => onSort('status')}
+                            sortDirection={sortColumn === 'disponible' ? sortDirection : null}
+                            onClick={() => onSort('disponible')}
                             className="w-[15%]"
                         >
                             STATUS
@@ -93,10 +93,7 @@ export default function ChefsList({
                             <TableCell>{truncateText(chef.user.email, 36)}</TableCell>
                             <TableCell>{formatDateToDDMMYYYY(chef.user.date_creation)}</TableCell>
                             <TableCell>
-                                {`${chef.years_experience} ans - ${
-                                    chef.specialites[0].charAt(0).toUpperCase() +
-                                    chef.specialites[0].slice(1)
-                                }`}
+                                {chef.years_experience}
                             </TableCell>
                             <TableCell>
                                 <span

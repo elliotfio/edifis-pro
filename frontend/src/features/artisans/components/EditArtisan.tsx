@@ -38,7 +38,12 @@ export default function EditArtisan({ onClose, onEdit, artisan, view }: EditArti
             lastName: artisan.user.lastName,
             email: artisan.user.email,
             specialites: artisan.specialites,
-            years_experience: 'years_experience' in artisan ? artisan.years_experience : undefined,
+            years_experience:
+                'years_experience' in artisan
+                    ? typeof artisan.years_experience === 'string'
+                        ? Number((artisan.years_experience as string).replace(' ans', ''))
+                        : (artisan.years_experience as number)
+                    : undefined,
         },
     });
 
@@ -49,7 +54,12 @@ export default function EditArtisan({ onClose, onEdit, artisan, view }: EditArti
             lastName: artisan.user.lastName,
             email: artisan.user.email,
             specialites: artisan.specialites,
-            years_experience: 'years_experience' in artisan ? artisan.years_experience : undefined,
+            years_experience:
+                'years_experience' in artisan
+                    ? typeof artisan.years_experience === 'string'
+                        ? Number((artisan.years_experience as string).replace(' ans', ''))
+                        : (artisan.years_experience as number)
+                    : undefined,
         });
     }, [artisan, reset]);
 

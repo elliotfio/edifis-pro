@@ -41,7 +41,7 @@ export default function Artisans() {
             try {
                 const [artisansResponse, chefsResponse] = await Promise.all([
                     fetch('http://localhost:3000/api/artisans'),
-                    fetch('http://localhost:3000/api/chefs')
+                    fetch('http://localhost:3000/api/chefs'),
                 ]);
 
                 if (!artisansResponse.ok || !chefsResponse.ok) {
@@ -50,7 +50,7 @@ export default function Artisans() {
 
                 const [artisansData, chefsData] = await Promise.all([
                     artisansResponse.json(),
-                    chefsResponse.json()
+                    chefsResponse.json(),
                 ]);
 
                 // Transformer les données des artisans
@@ -61,19 +61,21 @@ export default function Artisans() {
                         lastName: item.lastName,
                         email: item.email,
                         role: item.role,
-                        date_creation: item.date_creation
+                        date_creation: item.date_creation,
                     },
                     user_id: item.user_id,
                     disponible: item.disponible,
-                    specialites: Array.isArray(item.specialites) 
-                        ? item.specialites 
-                        : (item.specialites ? item.specialites.split(',') : []),
+                    specialites: Array.isArray(item.specialites)
+                        ? item.specialites
+                        : item.specialites
+                        ? item.specialites.split(',')
+                        : [],
                     note_moyenne: item.note_moyenne,
                     current_worksite: item.current_worksite,
                     history_worksite: item.history_worksite || [],
-                    all_worksites: Array.isArray(item.history_worksite) 
+                    all_worksites: Array.isArray(item.history_worksite)
                         ? item.history_worksite.length + (item.current_worksite ? 1 : 0)
-                        : 0
+                        : 0,
                 }));
 
                 // Transformer les données des chefs
@@ -84,7 +86,7 @@ export default function Artisans() {
                         lastName: item.lastName,
                         email: item.email,
                         role: item.role,
-                        date_creation: item.date_creation
+                        date_creation: item.date_creation,
                     },
                     user_id: item.user_id,
                     disponible: item.disponible,
@@ -93,9 +95,9 @@ export default function Artisans() {
                     note_moyenne: item.note_moyenne,
                     current_worksite: item.current_worksite,
                     history_worksite: item.history_worksite || [],
-                    all_worksites: Array.isArray(item.history_worksite) 
+                    all_worksites: Array.isArray(item.history_worksite)
                         ? item.history_worksite.length + (item.current_worksite ? 1 : 0)
-                        : 0
+                        : 0,
                 }));
 
                 setArtisans(formattedArtisans);
@@ -130,9 +132,10 @@ export default function Artisans() {
 
     const handleAdd = async (data: ArtisanFormData) => {
         try {
-            const endpoint = view === 'artisans' 
-                ? 'http://localhost:3000/api/artisans'
-                : 'http://localhost:3000/api/chefs';
+            const endpoint =
+                view === 'artisans'
+                    ? 'http://localhost:3000/api/artisans'
+                    : 'http://localhost:3000/api/chefs';
 
             const response = await fetch(endpoint, {
                 method: 'POST',
@@ -145,17 +148,22 @@ export default function Artisans() {
                     email: data.email,
                     password: `${data.lastName}.${data.firstName}`,
                     specialites: view === 'artisans' ? data.specialites : undefined,
-                    years_experience: view === 'chefs' ? data.years_experience : undefined
-                })
+                    years_experience: view === 'chefs' ? data.years_experience : undefined,
+                }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || `Erreur lors de la création ${view === 'artisans' ? "de l'artisan" : 'du chef'}`);
+                throw new Error(
+                    errorData.message ||
+                        `Erreur lors de la création ${
+                            view === 'artisans' ? "de l'artisan" : 'du chef'
+                        }`
+                );
             }
 
             const result = await response.json();
-            
+
             const newUser = {
                 user: {
                     id: result[view === 'artisans' ? 'artisan' : 'chef'].user_id,
@@ -167,26 +175,27 @@ export default function Artisans() {
                 },
                 user_id: result[view === 'artisans' ? 'artisan' : 'chef'].user_id,
                 disponible: result[view === 'artisans' ? 'artisan' : 'chef'].disponible,
-                specialites: view === 'artisans' 
-                    ? result.artisan.specialites
-                    : ['Chef de chantier'],
+                specialites:
+                    view === 'artisans' ? result.artisan.specialites : ['Chef de chantier'],
                 years_experience: view === 'chefs' ? result.chef.years_experience : undefined,
                 note_moyenne: result[view === 'artisans' ? 'artisan' : 'chef'].note_moyenne,
                 current_worksite: result[view === 'artisans' ? 'artisan' : 'chef'].current_worksite,
-                history_worksite: result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite || [],
-                all_worksites: Array.isArray(result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite) 
-                    ? result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite.length + 
+                history_worksite:
+                    result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite || [],
+                all_worksites: Array.isArray(
+                    result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite
+                )
+                    ? result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite.length +
                       (result[view === 'artisans' ? 'artisan' : 'chef'].current_worksite ? 1 : 0)
-                    : 0
+                    : 0,
             };
 
             if (view === 'artisans') {
-                setArtisans(prev => [...prev, newUser]);
+                setArtisans((prev) => [...prev, newUser]);
             } else {
-                setChefs(prev => [...prev, newUser]);
+                setChefs((prev) => [...prev, newUser]);
             }
             setIsAddModalOpen(false);
-
         } catch (error) {
             console.error('Erreur:', error);
             throw error;
@@ -197,18 +206,26 @@ export default function Artisans() {
         if (!editingUser) return;
 
         // Vérifier si l'email existe déjà (sauf pour l'utilisateur en cours d'édition)
-        const emailExists = view === 'artisans' 
-            ? artisans.some(user => user.user.email === formData.email && user.user.id !== editingUser.user.id)
-            : chefs.some(user => user.user.email === formData.email && user.user.id !== editingUser.user.id);
+        const emailExists =
+            view === 'artisans'
+                ? artisans.some(
+                      (user) =>
+                          user.user.email === formData.email && user.user.id !== editingUser.user.id
+                  )
+                : chefs.some(
+                      (user) =>
+                          user.user.email === formData.email && user.user.id !== editingUser.user.id
+                  );
 
         if (emailExists) {
             throw new Error('Cette adresse email est déjà utilisée');
         }
 
         try {
-            const endpoint = view === 'artisans'
-                ? `http://localhost:3000/api/artisans/${editingUser.user_id}`
-                : `http://localhost:3000/api/chefs/${editingUser.user_id}`;
+            const endpoint =
+                view === 'artisans'
+                    ? `http://localhost:3000/api/artisans/${editingUser.user_id}`
+                    : `http://localhost:3000/api/chefs/${editingUser.user_id}`;
 
             const response = await fetch(endpoint, {
                 method: 'PUT',
@@ -221,17 +238,22 @@ export default function Artisans() {
                     email: formData.email,
                     password: formData.password,
                     specialites: view === 'artisans' ? formData.specialites : undefined,
-                    years_experience: view === 'chefs' ? formData.years_experience : undefined
-                })
+                    years_experience: view === 'chefs' ? formData.years_experience : undefined,
+                }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || `Erreur lors de la mise à jour ${view === 'artisans' ? "de l'artisan" : 'du chef'}`);
+                throw new Error(
+                    errorData.message ||
+                        `Erreur lors de la mise à jour ${
+                            view === 'artisans' ? "de l'artisan" : 'du chef'
+                        }`
+                );
             }
 
             const result = await response.json();
-            
+
             const updatedUser = {
                 user: {
                     id: result[view === 'artisans' ? 'artisan' : 'chef'].user_id,
@@ -243,26 +265,31 @@ export default function Artisans() {
                 },
                 user_id: result[view === 'artisans' ? 'artisan' : 'chef'].user_id,
                 disponible: result[view === 'artisans' ? 'artisan' : 'chef'].disponible,
-                specialites: view === 'artisans' 
-                    ? result.artisan.specialites
-                    : ['Chef de chantier'],
+                specialites:
+                    view === 'artisans' ? result.artisan.specialites : ['Chef de chantier'],
                 years_experience: view === 'chefs' ? result.chef.years_experience : undefined,
                 note_moyenne: result[view === 'artisans' ? 'artisan' : 'chef'].note_moyenne,
                 current_worksite: result[view === 'artisans' ? 'artisan' : 'chef'].current_worksite,
-                history_worksite: result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite || [],
-                all_worksites: Array.isArray(result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite) 
-                    ? result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite.length + 
+                history_worksite:
+                    result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite || [],
+                all_worksites: Array.isArray(
+                    result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite
+                )
+                    ? result[view === 'artisans' ? 'artisan' : 'chef'].history_worksite.length +
                       (result[view === 'artisans' ? 'artisan' : 'chef'].current_worksite ? 1 : 0)
-                    : 0
+                    : 0,
             };
 
             if (view === 'artisans') {
-                setArtisans(prev => prev.map(item => item.user_id === editingUser.user_id ? updatedUser : item));
+                setArtisans((prev) =>
+                    prev.map((item) => (item.user_id === editingUser.user_id ? updatedUser : item))
+                );
             } else {
-                setChefs(prev => prev.map(item => item.user_id === editingUser.user_id ? updatedUser : item));
+                setChefs((prev) =>
+                    prev.map((item) => (item.user_id === editingUser.user_id ? updatedUser : item))
+                );
             }
             setEditingUser(null);
-
         } catch (error) {
             console.error('Erreur:', error);
             throw error;
@@ -276,29 +303,38 @@ export default function Artisans() {
     const handleDeleteConfirm = async () => {
         if (deleteModalUser) {
             try {
-                const endpoint = view === 'artisans' 
-                    ? `http://localhost:3000/api/artisans/${deleteModalUser.user_id}`
-                    : `http://localhost:3000/api/chefs/${deleteModalUser.user_id}`;
+                const endpoint =
+                    view === 'artisans'
+                        ? `http://localhost:3000/api/artisans/${deleteModalUser.user_id}`
+                        : `http://localhost:3000/api/chefs/${deleteModalUser.user_id}`;
 
                 const response = await fetch(endpoint, {
                     method: 'DELETE',
                     headers: {
-                        'Content-Type': 'application/json'
-                    }
+                        'Content-Type': 'application/json',
+                    },
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.message || `Erreur lors de la suppression de ${view === 'artisans' ? "l'artisan" : 'du chef'}`);
+                    throw new Error(
+                        errorData.message ||
+                            `Erreur lors de la suppression de ${
+                                view === 'artisans' ? "l'artisan" : 'du chef'
+                            }`
+                    );
                 }
 
                 if (view === 'artisans') {
-                    setArtisans(prev => prev.filter(artisan => artisan.user_id !== deleteModalUser.user_id));
+                    setArtisans((prev) =>
+                        prev.filter((artisan) => artisan.user_id !== deleteModalUser.user_id)
+                    );
                 } else {
-                    setChefs(prev => prev.filter(chef => chef.user_id !== deleteModalUser.user_id));
+                    setChefs((prev) =>
+                        prev.filter((chef) => chef.user_id !== deleteModalUser.user_id)
+                    );
                 }
                 setDeleteModalUser(null);
-
             } catch (error) {
                 console.error('Erreur:', error);
                 throw error;
@@ -307,20 +343,66 @@ export default function Artisans() {
     };
 
     const filteredData = useMemo(() => {
-        const data = view === 'artisans' ? artisans : chefs;
+        const data = view === 'artisans' ? [...artisans] : [...chefs];
 
-        if (!searchQuery) return data;
+        // Filtrage par recherche
+        const filtered = searchQuery
+            ? data.filter(
+                  (item) =>
+                      `${item.user.firstName} ${item.user.lastName}`
+                          .toLowerCase()
+                          .includes(searchQuery.toLowerCase()) ||
+                      item.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      item.specialites.some((spec) =>
+                          spec.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+              )
+            : data;
 
-        const searchLower = searchQuery.toLowerCase();
-        return data.filter(
-            (item) =>
-                `${item.user.firstName} ${item.user.lastName}`
-                    .toLowerCase()
-                    .includes(searchLower) ||
-                item.user.email.toLowerCase().includes(searchLower) ||
-                item.specialites.some((spec) => spec.toLowerCase().includes(searchLower))
-        );
-    }, [searchQuery, view, artisans, chefs]);
+        // Tri des données
+        if (sortColumn && sortDirection) {
+            filtered.sort((a, b) => {
+                let valueA, valueB;
+
+                // Déterminer les valeurs à comparer selon la colonne de tri
+                switch (sortColumn) {
+                    case 'firstName':
+                        valueA = `${a.user.firstName} ${a.user.lastName}`.toLowerCase();
+                        valueB = `${b.user.firstName} ${b.user.lastName}`.toLowerCase();
+                        break;
+                    case 'email':
+                        valueA = a.user.email.toLowerCase();
+                        valueB = b.user.email.toLowerCase();
+                        break;
+                    case 'date_creation':
+                        valueA = new Date(a.user.date_creation).getTime();
+                        valueB = new Date(b.user.date_creation).getTime();
+                        break;
+                    case 'specialites':
+                        valueA = a.specialites.join(',').toLowerCase();
+                        valueB = b.specialites.join(',').toLowerCase();
+                        break;
+                    case 'disponible':
+                        valueA = a.current_worksite ? 0 : 1;
+                        valueB = b.current_worksite ? 0 : 1;
+                        break;
+                    case 'years_experience':
+                        valueA = 'years_experience' in a ? a.years_experience || 0 : 0;
+                        valueB = 'years_experience' in b ? b.years_experience || 0 : 0;
+                        break;
+                    default:
+                        return 0;
+                }
+
+                // Effectuer la comparaison selon la direction du tri
+                if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
+                if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        return view === 'artisans' ? (filtered as ArtisanUser[]) : (filtered as ChefUser[]);
+    }, [searchQuery, view, artisans, chefs, sortColumn, sortDirection]);
 
     if (isLoading) {
         return <div>Chargement...</div>;
@@ -343,7 +425,7 @@ export default function Artisans() {
                     <Searchbar onSearch={handleSearch} className="flex-1" />
                     <Button variant="primary" onClick={() => setIsAddModalOpen(true)}>
                         <Plus className="mr-2" size={16} />
-                        Ajouter {view === 'artisans' ? "un artisan" : 'un chef'}
+                        Ajouter {view === 'artisans' ? 'un artisan' : 'un chef'}
                     </Button>
                 </div>
                 <div className="flex p-1 relative">

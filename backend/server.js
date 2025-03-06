@@ -2,6 +2,7 @@ const express = require("express");
 const mysql = require("mysql2");
 const dotenv = require("dotenv");
 const checkAndHashPasswords = require("./src/utils/passwordHasher");
+const cron = require("node-cron");
 
 dotenv.config();
 
@@ -33,6 +34,9 @@ const pool = mysql
   })
   .promise();
 
+// Importer la fonction assignWorksites
+const assignWorksites = require("./src/cron/assignWorksites");
+
 // Vérification de la connexion à la base de données
 pool
   .getConnection()
@@ -42,6 +46,9 @@ pool
 
     // Vérifier et hasher les mots de passe non hashés
     await checkAndHashPasswords();
+
+    // Exécuter manuellement l'attribution des chantiers au démarrage (optionnel)
+    // await assignWorksites();
   })
   .catch((err) => {
     console.error("❌ Erreur de connexion à la base de données:", err);
