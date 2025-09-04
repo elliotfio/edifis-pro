@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/authStore";
 import { authService } from "@/api/authService";
-import { AuthResponse } from "@/types";
+import { AuthResponse, PasswordResetResponse } from "@/types";
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 
@@ -100,6 +100,18 @@ export const useLogout = () => {
                 handleLogout();
                 navigate('/login');
             }
+        },
+    });
+};
+
+export const usePasswordReset = () => {
+    return useMutation<
+        PasswordResetResponse,
+        Error,
+        string
+    >({
+        mutationFn: async (email: string) => {
+            return await authService.requestPasswordReset(email);
         },
     });
 };

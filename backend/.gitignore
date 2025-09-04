@@ -1,3 +1,5 @@
 node_modules
 .env
 package-lock.json
+MIGRATION_GUIDE.md
+ARCHITECTURE.md

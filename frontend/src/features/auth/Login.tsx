@@ -1,15 +1,23 @@
 import { useLogin } from "@/api/queries/authQueries"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
+import { PasswordResetModal } from "@/components/ui/PasswordResetModal"
 import { loginSchema, type LoginFormData } from "@/validators/loginValidator"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from "framer-motion"
 import { useForm } from "react-hook-form"
+import { useState } from "react"
+import type { BruteForceError } from "@/types/authType"
 
 export default function Login() {
+  const [bruteForceError, setBruteForceError] = useState<BruteForceError | null>(null);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [currentEmail, setCurrentEmail] = useState("");
+
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -18,17 +26,36 @@ export default function Login() {
   const { mutate: loginUser } = useLogin();
 
   const onSubmit = async (data: LoginFormData) => {
+    setBruteForceError(null);
+    setCurrentEmail(data.email);
+    
     try {
       await new Promise((resolve, reject) => {
         loginUser(data, {
-          onSuccess: () => resolve(true),
-          onError: (error) => reject(error),
+          onSuccess: () => {
+            setBruteForceError(null);
+            resolve(true);
+          },
+          onError: (error: any) => {
+            // Gérer les erreurs de brute force
+            if (error?.response?.status === 429 || error?.response?.status === 423) {
+              const errorData = error.response.data as BruteForceError;
+              setBruteForceError(errorData);
+            }
+            reject(error);
+          },
         });
       });
     } catch (error) {
       console.error(error);
     }
   }
+
+  const handlePasswordReset = () => {
+    setShowPasswordReset(true);
+  }
+
+  const emailValue = watch("email");
 
   return (
     <div className="p-6 flex flex-col items-center justify-center min-h-screen">
@@ -47,26 +74,54 @@ export default function Login() {
             <div className="space-y-4">
               <Input
                 label="Email"
-                type="email"
-                {...register("email")}
                 error={errors.email?.message}
-                placeholder="votre@email.com"
+                {...register("email")}
               />
               <Input
                 label="Mot de passe"
-                type="password"
-                {...register("password")}
                 error={errors.password?.message}
-                placeholder="••••••••"
+                {...register("password")}
               />
             </div>
+
+            {/* Afficher les erreurs de brute force */}
+            {bruteForceError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`p-4 rounded-lg border ${
+                  bruteForceError.requiresPasswordReset 
+                    ? 'bg-red-50 border-red-200' 
+                    : 'bg-orange-50 border-orange-200'
+                }`}
+              >
+                <p className={`text-sm ${
+                  bruteForceError.requiresPasswordReset 
+                    ? 'text-red-700' 
+                    : 'text-orange-700'
+                }`}>
+                  {bruteForceError.message}
+                </p>
+                {bruteForceError.requiresPasswordReset && (
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    className="mt-3"
+                    onClick={handlePasswordReset}
+                  >
+                    Réinitialiser le mot de passe
+                  </Button>
+                )}
+              </motion.div>
+            )}
 
             <Button
               type="submit"
               variant="primary"
               className="w-full"
               isLoading={isSubmitting}
-              disabled={isSubmitting}
+              disabled={isSubmitting || (bruteForceError?.requiresPasswordReset === true)}
               loadingText="Connexion en cours..."
             >
               Se connecter
@@ -74,6 +129,13 @@ export default function Login() {
           </form>
         </motion.div>
       </div>
+      
+      {/* Modal de réinitialisation du mot de passe */}
+      <PasswordResetModal
+        isOpen={showPasswordReset}
+        onClose={() => setShowPasswordReset(false)}
+        defaultEmail={emailValue || currentEmail}
+      />
     </div>
   )
 }

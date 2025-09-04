@@ -29,3 +29,18 @@ export interface LoginCredentials {
   export interface RefreshTokenRequest {
     token: string;
   }
+
+  // Erreur de brute force
+  export interface BruteForceError {
+    message: string;
+    attemptCount?: number;
+    remainingTime?: number;
+    requiresPasswordReset?: boolean;
+  }
+
+  // Réponse de réinitialisation de mot de passe
+  export interface PasswordResetResponse {
+    message: string;
+    tempPassword?: string;
+    note?: string;
+  }

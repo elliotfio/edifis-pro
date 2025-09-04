@@ -40,6 +40,10 @@ class AuthService {
         const request: RefreshTokenRequest = { token: refreshToken };
         return api.fetchRequest('/api/auth/logout', 'POST', request);
     }
+
+    public async requestPasswordReset(email: string): Promise<ApiResponse<{ message: string; tempPassword?: string; note?: string }>> {
+        return api.fetchRequest('/api/auth/request-password-reset', 'POST', { email });
+    }
 }
 
 export const authService = new AuthService();
